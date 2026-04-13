@@ -1,0 +1,18 @@
+agent:
+  model:
+    endpoints: []
+    routing: {}
+    route-policies: {}
+# 示例：
+# agent:
+#   model:
+#     route-policies:
+#       primary-llm:
+#         primary-endpoint: openai-main
+#         secondary-endpoints:
+#           - deepseek-backup
+#         weighted-endpoints:
+#           openai-main: 8
+#           deepseek-backup: 2
+#         health-aware: true
+

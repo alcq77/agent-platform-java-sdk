@@ -1,0 +1,19 @@
+agent:
+  chat:
+    tools:
+      enabled: true
+    invoke:
+      max-attempts: 2
+      backoff-millis: 250
+    session:
+      max-messages: 40
+      ttl: 24h
+      key-prefix: agent:chat:session:
+  langchain4j:
+    model-gateway:
+      enabled: true
+      base-url: http://model-service:8103
+      logical-model: primary-llm
+      connect-timeout: 10s
+      read-timeout: 120s
+

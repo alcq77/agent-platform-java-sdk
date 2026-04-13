@@ -1,0 +1,5 @@
+# RAG 服务独立配置示例
+rag:
+  retrieve:
+    default-top-k: 5
+

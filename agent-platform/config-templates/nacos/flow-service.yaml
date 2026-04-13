@@ -1,0 +1,5 @@
+# Flow 服务独立配置示例
+flow:
+  run:
+    default-timeout-seconds: 60
+

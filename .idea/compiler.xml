@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="agent-boot" />
+        <module name="platform-boot" />
+        <module name="model-service" />
+        <module name="prompt-service" />
+        <module name="rag-service" />
+        <module name="common-redis" />
+        <module name="flow-service" />
+        <module name="agent-api" />
+        <module name="prompt-boot" />
+        <module name="flow-api" />
+        <module name="model-api" />
+        <module name="common-security" />
+        <module name="common-feign" />
+        <module name="gateway-boot" />
+        <module name="rag-api" />
+        <module name="prompt-api" />
+        <module name="rag-boot" />
+        <module name="agent-service" />
+        <module name="common-mybatis" />
+        <module name="platform-service" />
+        <module name="platform-api" />
+        <module name="common-kafka" />
+        <module name="model-boot" />
+        <module name="common-model-openai" />
+        <module name="flow-boot" />
+        <module name="common-core" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="agent-api" options="-parameters" />
+      <module name="agent-boot" options="-parameters" />
+      <module name="agent-service" options="-parameters" />
+      <module name="common-core" options="-parameters" />
+      <module name="common-feign" options="-parameters" />
+      <module name="common-kafka" options="-parameters" />
+      <module name="common-model-openai" options="-parameters" />
+      <module name="common-mybatis" options="-parameters" />
+      <module name="common-redis" options="-parameters" />
+      <module name="common-security" options="-parameters" />
+      <module name="flow-api" options="-parameters" />
+      <module name="flow-boot" options="-parameters" />
+      <module name="flow-service" options="-parameters" />
+      <module name="gateway-boot" options="-parameters" />
+      <module name="model-api" options="-parameters" />
+      <module name="model-boot" options="-parameters" />
+      <module name="model-service" options="-parameters" />
+      <module name="platform-api" options="-parameters" />
+      <module name="platform-boot" options="-parameters" />
+      <module name="platform-service" options="-parameters" />
+      <module name="prompt-api" options="-parameters" />
+      <module name="prompt-boot" options="-parameters" />
+      <module name="prompt-service" options="-parameters" />
+      <module name="rag-api" options="-parameters" />
+      <module name="rag-boot" options="-parameters" />
+      <module name="rag-service" options="-parameters" />
+    </option>
+  </component>
+</project>

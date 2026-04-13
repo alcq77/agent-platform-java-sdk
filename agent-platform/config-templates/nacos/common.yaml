@@ -1,0 +1,11 @@
+# 公共配置（所有服务共享）
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+logging:
+  level:
+    root: INFO
+

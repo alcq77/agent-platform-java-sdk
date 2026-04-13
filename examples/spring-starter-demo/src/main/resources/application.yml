@@ -1,0 +1,21 @@
+server:
+  port: 18080
+
+agent:
+  product:
+    workspace: ./workspace
+    plugin:
+      enabled: true
+      directory: ./workspace/plugins
+      reload-interval-seconds: 5
+    skills:
+      enabled: true
+      directory: ./workspace/skills
+    logical-model: primary-llm
+    endpoints:
+      primary:
+        provider: openai_compat
+        base-url: http://127.0.0.1:11434
+        default-model: llama3.2
+    routing:
+      primary-llm: primary
