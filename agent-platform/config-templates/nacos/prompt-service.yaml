@@ -1,5 +1,0 @@
-# Prompt 服务独立配置示例
-prompt:
-  render:
-    strict-variable-mode: false
-

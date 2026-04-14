@@ -5,7 +5,7 @@ Param(
 $ErrorActionPreference = "Stop"
 
 Write-Host "[1/3] Install local modules..."
-Set-Location "$Root\agent-platform"
+Set-Location "$Root\\cqgent"
 mvn -q clean install -DskipTests
 
 Write-Host "[2/3] Run java-sdk demo..."

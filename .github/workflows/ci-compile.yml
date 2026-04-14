@@ -21,4 +21,4 @@ jobs:
           cache: maven
 
       - name: Compile
-        run: mvn -q -f agent-platform/pom.xml clean compile -DskipTests
+        run: mvn -q -f cqgent/pom.xml clean compile -DskipTests

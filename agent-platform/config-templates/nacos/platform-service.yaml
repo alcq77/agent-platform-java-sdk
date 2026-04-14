@@ -1,5 +1,0 @@
-# 平台服务独立配置示例
-platform:
-  tenant:
-    cache-enabled: true
-

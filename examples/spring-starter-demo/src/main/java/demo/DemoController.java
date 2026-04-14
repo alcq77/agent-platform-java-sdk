@@ -1,7 +1,7 @@
 package demo;
 
-import com.agent.platform.agent.api.dto.AgentChatRequest;
-import com.agent.platform.product.sdk.AgentClient;
+import io.github.alcq77.cqgent.agent.api.dto.AgentChatRequest;
+import io.github.alcq77.cqgent.product.sdk.AgentClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;

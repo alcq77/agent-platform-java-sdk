@@ -1,53 +1,66 @@
-# aiAgent Jar 产品
+# AI Agent Java SDK (Preview)
 
-面向 Java 项目的智能体开发组件，支持以 Jar 方式快速集成，不依赖独立微服务平台。
+[![CI Compile Check](/actions/workflows/ci-compile.yml/badge.svg)](/actions/workflows/ci-compile.yml)
 
-## 产品形态
+一个面向 Java 的轻量 Agent 开发工具包。  
+目标是让项目通过 **SDK / Spring Boot Starter** 方式快速集成 Agent 能力，而不是先搭一整套独立平台。
 
-- `product-java-sdk`：纯 Java 接入（非 Spring 项目）
-- `product-spring-boot-starter`：Spring Boot 自动装配接入
-- `product-core-engine`：内嵌执行内核（会话、路由、工具）
-- `product-spi`：模型提供方/工具/会话存储扩展接口
-- `product-plugins`：可选插件集合（示例：`product-plugin-time`）
+> 当前仓库仍在慢速迭代中，接口和模块会继续优化。欢迎反馈和建议。
 
-## 5分钟上手
+## Why This Project
 
-### 1) Spring Boot Starter
+- 尽量少依赖：优先内嵌能力，减少额外部署成本
+- 易扩展：模型、工具、会话存储都提供 SPI
+- 可控：支持路由、熔断、工具调用安全校验
+- 可落地：提供 Starter 和示例工程，便于直接接入
 
-文档：[`docs/product/quick-start-starter.md`](docs/product/quick-start-starter.md)
+## Features
 
-### 2) Java SDK
+- 模型路由（逻辑模型、主备、加权、健康感知）
+- 标准 tool-calling 回路（含参数安全校验）
+- 会话管理（内置实现，可替换）
+- 插件与技能目录加载（workspace + plugins + skills）
+- Spring Boot 自动装配与健康检查
 
-文档：[`docs/product/quick-start-sdk.md`](docs/product/quick-start-sdk.md)
+## Quick Start
 
-## 模块结构
+### Spring Boot Starter
 
-仓库主工程：`agent-platform`
+见：`[docs/product/quick-start-starter.md](docs/product/quick-start-starter.md)`
 
-- `common/common-core`：基础通用能力
-- `agent/agent-api`：Agent 请求响应契约
-- `model/model-api`：Model 请求响应契约
-- `product/product-spi`：扩展 SPI
-- `product/product-core-engine`：内核实现
-- `product/product-java-sdk`：SDK 分发
-- `product/product-spring-boot-starter`：Starter 分发
-- `product/product-test-kit`：最小测试夹具
+### Java SDK
 
-## 核心能力
+见：`[docs/product/quick-start-sdk.md](docs/product/quick-start-sdk.md)`
 
-- **模型路由**：逻辑模型映射、主备候选、加权顺序、健康感知剔除
-- **会话能力**：内置会话管理与多轮上下文
-- **工具扩展**：通过 `ProductTool` 增加业务工具
-- **模型扩展**：通过 `ProductModelProvider` 增加任意厂商或协议
-- **Workspace 初始化**：Starter 启动时自动初始化 `workspace` 目录与基础文件
+## Examples
 
-## 文档导航
+- `examples/java-sdk-demo`：纯 Java 最小示例
+- `examples/spring-starter-demo`：Spring Boot 最小示例
 
-- [架构设计](01-architecture-design.md)
-- [技术栈说明](02-tech-stack-evaluation.md)
-- [任务拆分](03-task-breakdown.md)
-- [数据与事件](04-database-events.md)
-- [开发规范](05-development-standards.md)
+## Project Layout
+
+> 说明：源码主目录为 `cqgent`。
+
+- `cqgent-java-sdk`：SDK（源码位于 `cqgent/product/cqgent-java-sdk`）
+- `cqgent-spring-boot-starter`：Starter（源码位于 `cqgent/product/cqgent-spring-boot-starter`）
+- `cqgent-core-engine`：核心执行逻辑（源码位于 `cqgent/product/cqgent-core-engine`）
+- `cqgent-spi`：扩展接口（源码位于 `cqgent/product/cqgent-spi`）
+- `cqgent-plugins`：插件示例（源码位于 `cqgent/product/cqgent-plugins`）
+
+## Build
+
+Requirements:
+
+- JDK 21+
+- Maven 3.9+
+
+```bash
+cd cqgent
+mvn -q clean compile -DskipTests
+```
+
+## Docs
+
 - [配置参考](docs/product/config-reference.md)
 - [API 参考](docs/product/api-reference.md)
 - [SPI 扩展](docs/product/spi-extension.md)
@@ -55,33 +68,14 @@
 - [迁移指南](docs/product/migration-guide.md)
 - [发布治理](docs/product/release-governance.md)
 
-## 构建
+## Roadmap
 
-要求：
+- 更完善的工具调用协议与观测
+- 更细粒度的路由与熔断策略
+- Redis / DB 会话存储插件
+- 更完整的示例与自动化测试
 
-- JDK 21+
-- Maven 3.9+
+## Contributing
 
-执行：
-
-```bash
-cd agent-platform
-mvn -q clean compile -DskipTests
-```
-
-## 示例
-
-- `examples/java-sdk-demo`：纯 Java 代码示例
-- `examples/spring-starter-demo`：Starter 配置与控制器示例
-
-## 脚本
-
-- `scripts/run-examples.ps1`：安装依赖并运行示例
-- `scripts/preflight-check.ps1`：发布前编译与测试检查
-
-## 路线图
-
-- 标准 tool-calling 闭环
-- 路由熔断与动态降权
-- Redis/DB 会话存储插件
-- Starter 与 SDK 示例工程完善
+欢迎通过 Issue / PR 提建议。  
+如果你在接入过程中遇到问题，也欢迎直接提一个最小复现。

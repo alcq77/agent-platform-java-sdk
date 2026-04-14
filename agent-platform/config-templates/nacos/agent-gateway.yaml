@@ -1,9 +1,0 @@
-gateway:
-  security:
-    enabled: true
-    api-key: change-me
-    rate-limit:
-      enabled: true
-      max-requests: 120
-      window-seconds: 60
-
