@@ -21,6 +21,21 @@ public class ProductStarterProperties {
 
     private int maxHistoryMessages = 40;
 
+    /**
+     * 单次调用超时时间（毫秒），0 表示不限制。
+     */
+    private long invokeTimeoutMs = 60_000;
+
+    /**
+     * 单端点失败后的最大重试次数（不含首次调用）。
+     */
+    private int maxRetries = 1;
+
+    /**
+     * 重试退避时长（毫秒）。
+     */
+    private long retryBackoffMs = 300;
+
     private Map<String, Endpoint> endpoints = new LinkedHashMap<>();
 
     private Map<String, String> routing = new LinkedHashMap<>();
@@ -30,6 +45,8 @@ public class ProductStarterProperties {
     private Plugin plugin = new Plugin();
 
     private Skills skills = new Skills();
+
+    private Session session = new Session();
 
     @Data
     public static class Endpoint {
@@ -53,5 +70,38 @@ public class ProductStarterProperties {
     public static class Skills {
         private boolean enabled = true;
         private String directory = "./workspace/skills";
+    }
+
+    @Data
+    public static class Session {
+        /**
+         * 会话存储类型：in_memory / filesystem / redis / jdbc。
+         */
+        private String store = "in_memory";
+
+        /**
+         * Redis key 前缀，仅在 store=redis 时生效。
+         */
+        private String redisKeyPrefix = "cqgent:session:";
+
+        /**
+         * Redis 会话 TTL，默认 7 天；每次写入会刷新 TTL。
+         */
+        private Duration redisTtl = Duration.ofDays(7);
+
+        /**
+         * JDBC 表名，仅在 store=jdbc 时生效。
+         */
+        private String jdbcTable = "cqgent_session_store";
+
+        /**
+         * 是否在启动时自动建表（执行 create table if not exists）。
+         */
+        private boolean jdbcAutoInit = true;
+
+        /**
+         * 文件会话存储目录（store=filesystem 时生效）。
+         */
+        private String filesystemDirectory = "./workspace/sessions";
     }
 }

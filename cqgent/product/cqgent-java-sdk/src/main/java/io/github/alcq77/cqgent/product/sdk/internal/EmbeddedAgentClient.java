@@ -8,18 +8,31 @@ import io.github.alcq77.cqgent.product.sdk.AgentClient;
 import io.github.alcq77.cqgent.product.sdk.ProductSdkOptions;
 import io.github.alcq77.cqgent.product.spi.model.ProductEndpointConfig;
 import io.github.alcq77.cqgent.product.spi.model.ProductModelProvider;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.LongAdder;
 
-public class EmbeddedAgentClient implements AgentClient, CircuitBreakerSnapshotProvider {
+@Slf4j
+public class EmbeddedAgentClient implements AgentClient, CircuitBreakerSnapshotProvider, AgentRuntimeMetricsProvider {
 
     private final ProductSdkOptions options;
     private final ProductModelRouter modelRouter;
     private final ProductAgentEngine agentEngine;
     private final Map<String, ProductModelProvider> providers;
     private final Map<String, EndpointCircuitBreaker> circuitBreakers = new ConcurrentHashMap<>();
+    private final LongAdder totalRequests = new LongAdder();
+    private final LongAdder totalFailures = new LongAdder();
+    private final Map<String, LongAdder> endpointFailures = new ConcurrentHashMap<>();
+    private final Map<String, LongAdder> failureByType = new ConcurrentHashMap<>();
+    private final LongAdder circuitSkipped = new LongAdder();
 
     public EmbeddedAgentClient(ProductSdkOptions options,
                                ProductModelRouter modelRouter,
@@ -33,29 +46,45 @@ public class EmbeddedAgentClient implements AgentClient, CircuitBreakerSnapshotP
 
     @Override
     public AgentChatResponse chat(AgentChatRequest request) {
+        totalRequests.increment();
+        String traceId = resolveTraceId(request);
         String logicalModel = options.getLogicalModel();
         List<ProductEndpointConfig> candidates = modelRouter.resolveCandidates(
                 logicalModel, options.getEndpoints(), options.getRouting(), options.getRoutePolicies());
+        if (candidates.isEmpty()) {
+            markFailure("route", "none", new IllegalStateException("no route found"));
+        }
         RuntimeException last = null;
         for (ProductEndpointConfig endpoint : candidates) {
             if (options.isCircuitBreakerEnabled() && !breaker(endpoint).allowRequest()) {
+                circuitSkipped.increment();
+                log.warn("traceId={} endpoint={} skipped by circuit breaker", traceId, endpoint.getId());
                 continue;
             }
             ProductModelProvider provider = providers.get(endpoint.getProvider());
             if (provider == null) {
                 last = new IllegalStateException("provider not found: " + endpoint.getProvider());
+                markFailure("provider", endpoint.getId(), last);
                 continue;
             }
-            try {
-                AgentChatResponse response = agentEngine.chat(request, endpoint, provider, logicalModel);
-                breaker(endpoint).onSuccess();
-                return response;
-            } catch (RuntimeException ex) {
-                breaker(endpoint).onFailure(ex.getMessage());
-                last = ex;
+            for (int attempt = 0; attempt <= options.getMaxRetries(); attempt++) {
+                try {
+                    request.setTraceId(traceId);
+                    AgentChatResponse response = invokeWithTimeout(request, endpoint, provider, logicalModel);
+                    breaker(endpoint).onSuccess();
+                    response.setTraceId(traceId);
+                    return response;
+                } catch (RuntimeException ex) {
+                    breaker(endpoint).onFailure(ex.getMessage());
+                    markFailure(classifyFailureType(ex), endpoint.getId(), ex);
+                    last = ex;
+                    if (attempt < options.getMaxRetries()) {
+                        sleepBackoff();
+                    }
+                }
             }
         }
-        throw new IllegalStateException("all embedded endpoints failed: "
+        throw new IllegalStateException("traceId=" + traceId + ", all embedded endpoints failed: "
                 + (last == null ? "no route found" : last.getMessage()), last);
     }
 
@@ -69,5 +98,87 @@ public class EmbeddedAgentClient implements AgentClient, CircuitBreakerSnapshotP
         Map<String, EndpointCircuitBreaker.Snapshot> out = new ConcurrentHashMap<>();
         circuitBreakers.forEach((k, v) -> out.put(k, v.snapshot()));
         return out;
+    }
+
+    @Override
+    public Map<String, Object> runtimeMetrics() {
+        Map<String, Long> failureByEndpoint = new ConcurrentHashMap<>();
+        endpointFailures.forEach((k, v) -> failureByEndpoint.put(k, v.longValue()));
+        Map<String, Long> typedFailures = new ConcurrentHashMap<>();
+        failureByType.forEach((k, v) -> typedFailures.put(k, v.longValue()));
+        return Map.of(
+                "totalRequests", totalRequests.longValue(),
+                "totalFailures", totalFailures.longValue(),
+                "endpointFailures", failureByEndpoint,
+                "failureByType", typedFailures,
+                "circuitSkipped", circuitSkipped.longValue()
+        );
+    }
+
+    private static String resolveTraceId(AgentChatRequest request) {
+        if (request.getTraceId() != null && !request.getTraceId().isBlank()) {
+            return request.getTraceId().trim();
+        }
+        return UUID.randomUUID().toString();
+    }
+
+    private void markFailure(String type, String endpointId, RuntimeException ex) {
+        totalFailures.increment();
+        endpointFailures.computeIfAbsent(endpointId, k -> new LongAdder()).increment();
+        failureByType.computeIfAbsent(type, k -> new LongAdder()).increment();
+        log.warn("endpoint invoke failed, type={}, endpointId={}, message={}", type, endpointId, ex.getMessage());
+    }
+
+    private static String classifyFailureType(RuntimeException ex) {
+        String message = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
+        if (message.contains("timeout")) {
+            return "timeout";
+        }
+        if (message.contains("tool")) {
+            return "tool";
+        }
+        if (message.contains("route")) {
+            return "route";
+        }
+        return "upstream";
+    }
+
+    private AgentChatResponse invokeWithTimeout(AgentChatRequest request,
+                                                ProductEndpointConfig endpoint,
+                                                ProductModelProvider provider,
+                                                String logicalModel) {
+        long timeoutMs = options.getInvokeTimeoutMs();
+        if (timeoutMs <= 0) {
+            return agentEngine.chat(request, endpoint, provider, logicalModel);
+        }
+        CompletableFuture<AgentChatResponse> future = CompletableFuture.supplyAsync(
+                () -> agentEngine.chat(request, endpoint, provider, logicalModel)
+        );
+        try {
+            return future.get(timeoutMs, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException ex) {
+            future.cancel(true);
+            throw new IllegalStateException("invoke timeout after " + timeoutMs + "ms", ex);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("invoke interrupted", ex);
+        } catch (ExecutionException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof RuntimeException re) {
+                throw re;
+            }
+            throw new IllegalStateException("invoke execution failed", cause);
+        }
+    }
+
+    private void sleepBackoff() {
+        if (options.getRetryBackoffMs() <= 0) {
+            return;
+        }
+        try {
+            Thread.sleep(options.getRetryBackoffMs());
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

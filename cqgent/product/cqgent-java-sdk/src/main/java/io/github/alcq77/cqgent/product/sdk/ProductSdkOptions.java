@@ -39,4 +39,19 @@ public class ProductSdkOptions {
      * 熔断打开后冷却秒数。
      */
     private int circuitOpenSeconds = 30;
+
+    /**
+     * 单次模型调用超时时间（毫秒），<=0 表示不设置超时。
+     */
+    private long invokeTimeoutMs = 60_000;
+
+    /**
+     * 单端点失败后的最大重试次数（不含首次调用）。
+     */
+    private int maxRetries = 1;
+
+    /**
+     * 重试退避时间（毫秒）。
+     */
+    private long retryBackoffMs = 300;
 }

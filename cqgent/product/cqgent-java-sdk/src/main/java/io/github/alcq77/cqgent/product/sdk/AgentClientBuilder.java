@@ -67,6 +67,17 @@ public class AgentClientBuilder {
         return this;
     }
 
+    public AgentClientBuilder invokeTimeoutMillis(long timeoutMs) {
+        options.setInvokeTimeoutMs(Math.max(0, timeoutMs));
+        return this;
+    }
+
+    public AgentClientBuilder retry(int maxRetries, long backoffMs) {
+        options.setMaxRetries(Math.max(0, maxRetries));
+        options.setRetryBackoffMs(Math.max(0, backoffMs));
+        return this;
+    }
+
     public AgentClientBuilder sessionStore(ProductSessionStore store) {
         this.sessionStore = store;
         return this;

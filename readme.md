@@ -1,11 +1,11 @@
 # AI Agent Java SDK (Preview)
 
-[![CI Compile Check](/actions/workflows/ci-compile.yml/badge.svg)](/actions/workflows/ci-compile.yml)
+[CI Compile Check](https://github.com/alcq77/agent-platform-java-sdk/actions/workflows/ci-compile.yml)
 
 一个面向 Java 的轻量 Agent 开发工具包。  
 目标是让项目通过 **SDK / Spring Boot Starter** 方式快速集成 Agent 能力，而不是先搭一整套独立平台。
 
-> 当前仓库仍在慢速迭代中，接口和模块会继续优化。欢迎反馈和建议。
+> 当前仓库仍在慢速迭代中，会继续优化。欢迎反馈和建议。
 
 ## Why This Project
 
@@ -18,9 +18,9 @@
 
 - 模型路由（逻辑模型、主备、加权、健康感知）
 - 标准 tool-calling 回路（含参数安全校验）
-- 会话管理（内置实现，可替换）
+- 会话管理（内置内存/文件系统 + Redis/JDBC 存储）
 - 插件与技能目录加载（workspace + plugins + skills）
-- Spring Boot 自动装配与健康检查
+- Spring Boot 自动装配与健康检查（含 `cqgentSessionStore` Actuator 端点）
 
 ## Quick Start
 
@@ -62,6 +62,7 @@ mvn -q clean compile -DskipTests
 ## Docs
 
 - [配置参考](docs/product/config-reference.md)
+- [核心功能基线](docs/product/core-capabilities.md)
 - [API 参考](docs/product/api-reference.md)
 - [SPI 扩展](docs/product/spi-extension.md)
 - [Workspace 规范](docs/product/workspace-layout.md)

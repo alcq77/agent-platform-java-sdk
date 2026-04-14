@@ -64,6 +64,7 @@ public class ProductAgentEngine {
                 .inputTokens(usage == null ? null : usage.getPromptTokens())
                 .outputTokens(usage == null ? null : usage.getCompletionTokens())
                 .totalTokens(usage == null ? null : usage.getTotalTokens())
+                .traceId(request.getTraceId())
                 .build();
     }
 

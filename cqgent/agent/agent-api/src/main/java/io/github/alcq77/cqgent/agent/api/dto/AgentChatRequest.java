@@ -32,4 +32,9 @@ public class AgentChatRequest {
      * 可选系统提示；每轮请求可覆盖，不写入会话历史。
      */
     private String systemPrompt;
+
+    /**
+     * 请求追踪 ID；不传时由运行时自动生成并回传。
+     */
+    private String traceId;
 }

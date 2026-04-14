@@ -27,6 +27,7 @@ public class ProductWorkspaceInitializer implements ApplicationRunner {
         Files.createDirectories(root.resolve("skills"));
         Files.createDirectories(root.resolve("plugins"));
         Files.createDirectories(root.resolve("tasks"));
+        Files.createDirectories(root.resolve("sessions"));
         Files.createDirectories(root.resolve("skills").resolve("default"));
         writeIfAbsent(root.resolve("AGENT.md"), "# AGENT\n\nDefine your agent role and style here.\n");
         writeIfAbsent(root.resolve("INFO.md"), "# INFO\n\nPut runtime and business context here.\n");

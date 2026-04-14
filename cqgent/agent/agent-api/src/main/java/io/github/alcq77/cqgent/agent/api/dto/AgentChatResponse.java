@@ -25,4 +25,9 @@ public class AgentChatResponse {
     private Integer outputTokens;
 
     private Integer totalTokens;
+
+    /**
+     * 请求追踪 ID；用于日志与问题排查串联。
+     */
+    private String traceId;
 }
