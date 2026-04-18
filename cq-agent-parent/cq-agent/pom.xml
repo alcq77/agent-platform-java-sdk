@@ -6,12 +6,12 @@
 
     <parent>
         <groupId>io.github.alcq77.cqgent</groupId>
-        <artifactId>cqgent-parent</artifactId>
+        <artifactId>cq-agent-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>cqgent</artifactId>
+    <artifactId>cq-agent</artifactId>
     <packaging>pom</packaging>
     <name>cqgent</name>
     <description>cqgent distribution: core / sdk / starter</description>
