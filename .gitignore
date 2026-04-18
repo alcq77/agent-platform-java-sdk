@@ -15,3 +15,6 @@ docs/
 
 # Local reference projects should not be committed
 references/
+
+# Local temporary dependency cache
+.tmp_lc4j/
