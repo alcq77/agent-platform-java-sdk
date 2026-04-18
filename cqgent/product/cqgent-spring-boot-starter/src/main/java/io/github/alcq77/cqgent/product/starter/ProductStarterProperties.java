@@ -48,6 +48,8 @@ public class ProductStarterProperties {
 
     private Session session = new Session();
 
+    private Prompts prompts = new Prompts();
+
     @Data
     public static class Endpoint {
         private String provider = "openai_compat";
@@ -103,5 +105,30 @@ public class ProductStarterProperties {
          * 文件会话存储目录（store=filesystem 时生效）。
          */
         private String filesystemDirectory = "./workspace/sessions";
+    }
+
+    @Data
+    public static class Prompts {
+        /**
+         * 默认模板 ID。
+         */
+        private String defaultTemplateId;
+
+        /**
+         * 模板缺失时是否回退到默认模板。
+         */
+        private boolean fallbackToDefault = true;
+
+        /**
+         * 命名模板集合（key=templateId）。
+         */
+        private Map<String, PromptTemplate> templates = new LinkedHashMap<>();
+    }
+
+    @Data
+    public static class PromptTemplate {
+        private String version;
+        private String systemPrompt;
+        private String userMessage;
     }
 }

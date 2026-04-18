@@ -87,6 +87,28 @@ public class FileSystemProductSessionStore implements ProductSessionStore, Sessi
     }
 
     @Override
+    public void replaceHistory(String sessionId, List<ChatMessageDto> messages) {
+        Object lock = locks.computeIfAbsent(sessionId, k -> new Object());
+        synchronized (lock) {
+            List<ChatMessageDto> history = messages == null ? new ArrayList<>() : new ArrayList<>(messages);
+            int overflow = history.size() - maxHistoryMessages;
+            if (overflow > 0) {
+                history.subList(0, overflow).clear();
+            }
+            writeMessages(resolveFile(sessionId), history);
+        }
+    }
+
+    @Override
+    public void deleteSession(String sessionId) {
+        try {
+            Files.deleteIfExists(resolveFile(sessionId));
+        } catch (Exception ex) {
+            log.warn("failed to delete session file for sessionId={}", sessionId, ex);
+        }
+    }
+
+    @Override
     public boolean healthy() {
         try {
             ensureDirectory();

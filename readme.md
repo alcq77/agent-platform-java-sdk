@@ -17,7 +17,7 @@
 ## Features
 
 - 模型路由（逻辑模型、主备、加权、健康感知）
-- 标准 tool-calling 回路（含参数安全校验）
+- 基于 LangChain4j 的 Agent 主链与 tool-calling 适配层
 - 会话管理（内置内存/文件系统 + Redis/JDBC 存储）
 - 插件与技能目录加载（workspace + plugins + skills）
 - Spring Boot 自动装配与健康检查（含 `cqgentSessionStore` Actuator 端点）
@@ -43,7 +43,7 @@
 
 - `cqgent-java-sdk`：SDK（源码位于 `cqgent/product/cqgent-java-sdk`）
 - `cqgent-spring-boot-starter`：Starter（源码位于 `cqgent/product/cqgent-spring-boot-starter`）
-- `cqgent-core-engine`：核心执行逻辑（源码位于 `cqgent/product/cqgent-core-engine`）
+- `cqgent-core-engine`：基于 LangChain4j 的核心运行时（源码位于 `cqgent/product/cqgent-core-engine`）
 - `cqgent-spi`：扩展接口（源码位于 `cqgent/product/cqgent-spi`）
 - `cqgent-plugins`：插件示例（源码位于 `cqgent/product/cqgent-plugins`）
 
@@ -58,6 +58,12 @@ Requirements:
 cd cqgent
 mvn -q clean compile -DskipTests
 ```
+
+## Code Conventions
+
+- 新增运行时链路代码时，优先补齐类/方法注释，说明“职责边界 + 调用顺序”
+- 关键分支（路由、重试、熔断、工具调用）增加简短行内注释，便于排障
+- 对外 SPI 保持语义稳定；破坏性调整需给出兼容层或迁移提示
 
 ## Docs
 

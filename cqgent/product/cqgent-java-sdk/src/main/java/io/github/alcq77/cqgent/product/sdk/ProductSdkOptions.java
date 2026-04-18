@@ -21,6 +21,21 @@ public class ProductSdkOptions {
     private Map<String, RoutePolicy> routePolicies = new LinkedHashMap<>();
 
     /**
+     * Prompt 模板仓库（key=templateId）。
+     */
+    private Map<String, PromptTemplate> promptTemplates = new LinkedHashMap<>();
+
+    /**
+     * 默认模板 ID（当请求未指定 promptTemplateId 时使用）。
+     */
+    private String defaultPromptTemplateId;
+
+    /**
+     * 当请求模板不存在时，是否回退到默认模板。
+     */
+    private boolean fallbackToDefaultPromptTemplate = true;
+
+    /**
      * tool-calling 最大回合数，防止模型与工具进入无限循环。
      */
     private int maxToolCallIterations = 3;
@@ -54,4 +69,22 @@ public class ProductSdkOptions {
      * 重试退避时间（毫秒）。
      */
     private long retryBackoffMs = 300;
+
+    @Data
+    public static class PromptTemplate {
+        /**
+         * 模板版本（可选，仅用于观测与管理）。
+         */
+        private String version;
+
+        /**
+         * 系统提示模板。
+         */
+        private String systemPrompt;
+
+        /**
+         * 用户消息模板，支持 {{message}} 占位符。
+         */
+        private String userMessage;
+    }
 }

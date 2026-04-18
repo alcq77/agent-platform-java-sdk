@@ -28,11 +28,29 @@ public class JdbcProductSessionStore implements ProductSessionStore, SessionStor
 
     private static final TypeReference<List<ChatMessageDto>> MESSAGE_LIST_TYPE = new TypeReference<>() {};
 
+    /**
+     * 数据库访问模板。
+     */
     private final JdbcTemplate jdbcTemplate;
+    /**
+     * 消息序列化器。
+     */
     private final ObjectMapper objectMapper;
+    /**
+     * 事务模板，保证读改写一致性。
+     */
     private final TransactionTemplate transactionTemplate;
+    /**
+     * 存储表名（已做白名单校验）。
+     */
     private final String table;
+    /**
+     * 历史消息窗口上限。
+     */
     private final int maxHistoryMessages;
+    /**
+     * 是否允许启动自动建表。
+     */
     private final boolean autoInit;
     private final AtomicBoolean initDone = new AtomicBoolean(false);
 
@@ -115,6 +133,41 @@ public class JdbcProductSessionStore implements ProductSessionStore, SessionStor
         });
     }
 
+    @Override
+    public void replaceHistory(String sessionId, List<ChatMessageDto> messages) {
+        ensureTable();
+        transactionTemplate.executeWithoutResult(status -> {
+            // 覆盖式更新，符合 ChatMemoryStore.updateMessages 语义。
+            List<ChatMessageDto> history = messages == null ? new ArrayList<>() : new ArrayList<>(messages);
+            int overflow = history.size() - maxHistoryMessages;
+            if (overflow > 0) {
+                history.subList(0, overflow).clear();
+            }
+            String payload = encode(history);
+            int updated = jdbcTemplate.update(
+                    "update " + table + " set payload = ? where session_id = ?",
+                    payload,
+                    sessionId
+            );
+            if (updated == 0) {
+                jdbcTemplate.update(
+                        "insert into " + table + " (session_id, payload) values (?, ?)",
+                        sessionId,
+                        payload
+                );
+            }
+        });
+    }
+
+    @Override
+    public void deleteSession(String sessionId) {
+        ensureTable();
+        jdbcTemplate.update("delete from " + table + " where session_id = ?", sessionId);
+    }
+
+    /**
+     * 延迟初始化表结构，避免无用 DDL。
+     */
     private void ensureTable() {
         if (!autoInit || initDone.get()) {
             return;
@@ -154,6 +207,7 @@ public class JdbcProductSessionStore implements ProductSessionStore, SessionStor
     }
 
     private String sanitizeTable(String table) {
+        // 仅允许字母/数字/下划线，防止 SQL 注入型表名拼接风险。
         String value = (table == null || table.isBlank()) ? "cqgent_session_store" : table.trim();
         if (!value.matches("[a-zA-Z0-9_]+")) {
             throw new IllegalArgumentException("Invalid jdbc table name: " + value);

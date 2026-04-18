@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 统一聊天补全请求（对外契约与 OpenAI 高度兼容，便于各厂商切换 baseUrl）。
+ * Legacy compatibility DTO for OpenAI-compatible chat completion requests.
  */
 @Data
 @Builder

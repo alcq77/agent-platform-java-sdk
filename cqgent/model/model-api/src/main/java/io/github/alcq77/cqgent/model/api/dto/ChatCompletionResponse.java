@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * 统一聊天补全响应（OpenAI 形态，Anthropic 等会在服务端映射为此结构）。
+ * Legacy compatibility DTO for OpenAI-compatible chat completion responses.
  */
 @Data
 @Builder

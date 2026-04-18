@@ -40,7 +40,13 @@ public class ProductAgentAutoConfiguration {
                 .logicalModel(properties.getLogicalModel())
                 .maxHistoryMessages(properties.getMaxHistoryMessages())
                 .invokeTimeoutMillis(properties.getInvokeTimeoutMs())
-                .retry(properties.getMaxRetries(), properties.getRetryBackoffMs());
+                .retry(properties.getMaxRetries(), properties.getRetryBackoffMs())
+                .fallbackToDefaultPromptTemplate(properties.getPrompts().isFallbackToDefault());
+        if (properties.getPrompts().getDefaultTemplateId() != null && !properties.getPrompts().getDefaultTemplateId().isBlank()) {
+            builder.defaultPromptTemplate(properties.getPrompts().getDefaultTemplateId());
+        }
+        properties.getPrompts().getTemplates().forEach((templateId, template) ->
+                builder.promptTemplate(templateId, template.getSystemPrompt(), template.getUserMessage()));
         properties.getRouting().forEach(builder::route);
         properties.getRoutePolicies().forEach(builder::routePolicy);
         properties.getEndpoints().forEach((id, ep) -> builder.endpoint(ProductEndpointConfig.builder()

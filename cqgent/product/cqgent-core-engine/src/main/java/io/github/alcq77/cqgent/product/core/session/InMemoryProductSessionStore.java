@@ -43,4 +43,19 @@ public class InMemoryProductSessionStore implements ProductSessionStore {
             history.subList(0, overflow).clear();
         }
     }
+
+    @Override
+    public void replaceHistory(String sessionId, List<ChatMessageDto> messages) {
+        List<ChatMessageDto> copy = messages == null ? new ArrayList<>() : new ArrayList<>(messages);
+        int overflow = copy.size() - maxHistoryMessages;
+        if (overflow > 0) {
+            copy.subList(0, overflow).clear();
+        }
+        sessions.put(sessionId, copy);
+    }
+
+    @Override
+    public void deleteSession(String sessionId) {
+        sessions.remove(sessionId);
+    }
 }

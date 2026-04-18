@@ -7,6 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * Agent 对话请求（同步）。
  */
@@ -37,4 +40,15 @@ public class AgentChatRequest {
      * 请求追踪 ID；不传时由运行时自动生成并回传。
      */
     private String traceId;
+
+    /**
+     * Prompt 模板 ID（例如: customer-support:v1）。
+     */
+    private String promptTemplateId;
+
+    /**
+     * Prompt 模板变量；用于替换 systemPrompt/message 中的 {{key}} 占位符。
+     */
+    @Builder.Default
+    private Map<String, String> promptVariables = new LinkedHashMap<>();
 }

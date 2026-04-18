@@ -2,7 +2,8 @@ package io.github.alcq77.cqgent.product.sdk.internal;
 
 import io.github.alcq77.cqgent.agent.api.dto.AgentChatRequest;
 import io.github.alcq77.cqgent.agent.api.dto.AgentChatResponse;
-import io.github.alcq77.cqgent.product.core.agent.ProductAgentEngine;
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import io.github.alcq77.cqgent.product.core.agent.LangChain4jProductAgentRuntime;
 import io.github.alcq77.cqgent.product.core.model.ProductModelRouter;
 import io.github.alcq77.cqgent.product.sdk.AgentClient;
 import io.github.alcq77.cqgent.product.sdk.ProductSdkOptions;
@@ -24,8 +25,14 @@ import java.util.concurrent.atomic.LongAdder;
 public class EmbeddedAgentClient implements AgentClient, CircuitBreakerSnapshotProvider, AgentRuntimeMetricsProvider {
 
     private final ProductSdkOptions options;
+    /**
+     * 只负责 endpoint 选路，不负责模型调用细节。
+     */
     private final ProductModelRouter modelRouter;
-    private final ProductAgentEngine agentEngine;
+    /**
+     * LangChain4j 基座运行时门面。
+     */
+    private final LangChain4jProductAgentRuntime runtime;
     private final Map<String, ProductModelProvider> providers;
     private final Map<String, EndpointCircuitBreaker> circuitBreakers = new ConcurrentHashMap<>();
     private final LongAdder totalRequests = new LongAdder();
@@ -36,11 +43,11 @@ public class EmbeddedAgentClient implements AgentClient, CircuitBreakerSnapshotP
 
     public EmbeddedAgentClient(ProductSdkOptions options,
                                ProductModelRouter modelRouter,
-                               ProductAgentEngine agentEngine,
+                               LangChain4jProductAgentRuntime runtime,
                                Map<String, ProductModelProvider> providers) {
         this.options = options;
         this.modelRouter = modelRouter;
-        this.agentEngine = agentEngine;
+        this.runtime = runtime;
         this.providers = providers;
     }
 
@@ -56,6 +63,7 @@ public class EmbeddedAgentClient implements AgentClient, CircuitBreakerSnapshotP
         }
         RuntimeException last = null;
         for (ProductEndpointConfig endpoint : candidates) {
+            // 熔断只作用于 endpoint 维度，避免单点持续雪崩。
             if (options.isCircuitBreakerEnabled() && !breaker(endpoint).allowRequest()) {
                 circuitSkipped.increment();
                 log.warn("traceId={} endpoint={} skipped by circuit breaker", traceId, endpoint.getId());
@@ -111,7 +119,8 @@ public class EmbeddedAgentClient implements AgentClient, CircuitBreakerSnapshotP
                 "totalFailures", totalFailures.longValue(),
                 "endpointFailures", failureByEndpoint,
                 "failureByType", typedFailures,
-                "circuitSkipped", circuitSkipped.longValue()
+                "circuitSkipped", circuitSkipped.longValue(),
+                "promptTemplates", runtime.promptTemplateMetrics()
         );
     }
 
@@ -149,10 +158,10 @@ public class EmbeddedAgentClient implements AgentClient, CircuitBreakerSnapshotP
                                                 String logicalModel) {
         long timeoutMs = options.getInvokeTimeoutMs();
         if (timeoutMs <= 0) {
-            return agentEngine.chat(request, endpoint, provider, logicalModel);
+            return invokeRuntime(request, endpoint, provider, logicalModel);
         }
         CompletableFuture<AgentChatResponse> future = CompletableFuture.supplyAsync(
-                () -> agentEngine.chat(request, endpoint, provider, logicalModel)
+                () -> invokeRuntime(request, endpoint, provider, logicalModel)
         );
         try {
             return future.get(timeoutMs, TimeUnit.MILLISECONDS);
@@ -169,6 +178,15 @@ public class EmbeddedAgentClient implements AgentClient, CircuitBreakerSnapshotP
             }
             throw new IllegalStateException("invoke execution failed", cause);
         }
+    }
+
+    private AgentChatResponse invokeRuntime(AgentChatRequest request,
+                                            ProductEndpointConfig endpoint,
+                                            ProductModelProvider provider,
+                                            String logicalModel) {
+        // 由 provider 生成 LangChain4j 模型，再交给 runtime 执行统一对话流程。
+        ChatLanguageModel model = provider.createChatLanguageModel(endpoint, logicalModel);
+        return runtime.chat(request, model, logicalModel);
     }
 
     private void sleepBackoff() {

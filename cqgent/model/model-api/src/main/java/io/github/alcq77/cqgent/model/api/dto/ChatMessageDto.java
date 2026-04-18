@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 单条对话消息（与 OpenAI messages 项对齐：role + content）。
+ * Legacy compatibility DTO for OpenAI-style chat messages.
  */
 @Data
 @Builder
