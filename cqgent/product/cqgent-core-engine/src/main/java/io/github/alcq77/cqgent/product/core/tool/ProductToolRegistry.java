@@ -1,13 +1,14 @@
 package io.github.alcq77.cqgent.product.core.tool;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import io.github.alcq77.cqgent.product.spi.tool.ProductTool;
+import io.github.alcq77.cqgent.product.spi.tool.ProductToolParameterSpec;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * ProductTool 到 LangChain4j ToolSpecification 的适配器。
@@ -22,6 +23,10 @@ public class ProductToolRegistry {
      * 预构建的 LangChain4j 工具描述，避免每轮重复创建。
      */
     private final List<ToolSpecification> specifications;
+    /**
+     * JSON 参数解析器。
+     */
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ProductToolRegistry(List<ProductTool> tools) {
         if (tools != null) {
@@ -49,46 +54,79 @@ public class ProductToolRegistry {
         if (tool == null) {
             throw new IllegalStateException("tool not found: " + request.name());
         }
-        String input = extractArgument(request.arguments());
-        return tool.execute(input);
+        Map<String, Object> arguments = parseArguments(request.arguments());
+        validateArguments(tool, arguments);
+        return tool.execute(arguments);
     }
 
     private static ToolSpecification toSpecification(ProductTool tool) {
-        // 当前统一入参协议：{"input":"..."}，兼容已有 ProductTool#execute(String) 形态。
-        JsonObjectSchema parameters = JsonObjectSchema.builder()
-                .addStringProperty("input", "The plain text input for this tool.")
-                .required("input")
-                .build();
+        JsonObjectSchema.Builder schemaBuilder = JsonObjectSchema.builder();
+        List<String> required = new ArrayList<>();
+        for (Map.Entry<String, ProductToolParameterSpec> entry : tool.parameterSpecs().entrySet()) {
+            String name = entry.getKey();
+            ProductToolParameterSpec spec = Objects.requireNonNull(entry.getValue(), "parameter spec must not be null");
+            String type = spec.type() == null ? "string" : spec.type().trim().toLowerCase();
+            String description = spec.description();
+            switch (type) {
+                case "integer" -> schemaBuilder.addIntegerProperty(name, description);
+                case "number" -> schemaBuilder.addNumberProperty(name, description);
+                case "boolean" -> schemaBuilder.addBooleanProperty(name, description);
+                default -> schemaBuilder.addStringProperty(name, description);
+            }
+            if (spec.required()) {
+                required.add(name);
+            }
+        }
+        if (!required.isEmpty()) {
+            schemaBuilder.required(required);
+        }
+        JsonObjectSchema parameters = schemaBuilder.additionalProperties(false).build();
         return ToolSpecification.builder()
                 .name(tool.name())
-                .description("cqgent product tool: " + tool.name())
+            .description(tool.description())
                 .parameters(parameters)
                 .build();
     }
 
-    private static String extractArgument(String arguments) {
+    private Map<String, Object> parseArguments(String arguments) {
         if (arguments == null || arguments.isBlank()) {
-            return "";
+            return Map.of();
         }
         String text = arguments.trim();
-        int keyIndex = text.indexOf("\"input\"");
-        if (keyIndex < 0) {
-            // 兼容极简场景：模型直接返回纯字符串参数。
-            return stripQuotes(text);
+        if (!text.startsWith("{")) {
+            return Map.of("input", stripQuotes(text));
         }
-        int colon = text.indexOf(':', keyIndex);
-        if (colon < 0) {
-            return "";
+        try {
+            Map<String, Object> parsed = objectMapper.readValue(text, new TypeReference<>() {
+            });
+            return parsed == null ? Map.of() : parsed;
+        } catch (Exception ex) {
+            throw new IllegalStateException("invalid tool arguments json: " + arguments, ex);
         }
-        int startQuote = text.indexOf('"', colon + 1);
-        if (startQuote < 0) {
-            return text.substring(colon + 1).replace("}", "").trim();
+    }
+
+    private static void validateArguments(ProductTool tool, Map<String, Object> arguments) {
+        for (Map.Entry<String, ProductToolParameterSpec> entry : tool.parameterSpecs().entrySet()) {
+            String name = entry.getKey();
+            ProductToolParameterSpec spec = entry.getValue();
+            Object value = arguments.get(name);
+            if (spec.required() && value == null) {
+                throw new IllegalStateException("tool argument missing: " + name);
+            }
+            if (value == null) {
+                continue;
+            }
+            String type = spec.type() == null ? "string" : spec.type().trim().toLowerCase();
+            boolean matched = switch (type) {
+                case "integer" -> value instanceof Integer || value instanceof Long;
+                case "number" -> value instanceof Number;
+                case "boolean" -> value instanceof Boolean;
+                default -> value instanceof String;
+            };
+            if (!matched) {
+                throw new IllegalStateException("tool argument type mismatch for " + name + ": expected " + type);
+            }
         }
-        int endQuote = text.indexOf('"', startQuote + 1);
-        if (endQuote < 0) {
-            return text.substring(startQuote + 1).trim();
-        }
-        return text.substring(startQuote + 1, endQuote);
     }
 
     private static String stripQuotes(String value) {

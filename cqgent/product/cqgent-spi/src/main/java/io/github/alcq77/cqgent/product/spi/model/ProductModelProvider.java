@@ -1,6 +1,7 @@
 package io.github.alcq77.cqgent.product.spi.model;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 
 /**
  * 模型提供方 SPI。
@@ -25,4 +26,11 @@ public interface ProductModelProvider {
      * @return LangChain4j 聊天模型实例
      */
     ChatLanguageModel createChatLanguageModel(ProductEndpointConfig endpoint, String logicalModel);
+
+    /**
+     * 构建流式聊天模型；默认实现可选择不支持。
+     */
+    default StreamingChatLanguageModel createStreamingChatLanguageModel(ProductEndpointConfig endpoint, String logicalModel) {
+        throw new UnsupportedOperationException("streaming model is not supported by provider: " + providerCode());
+    }
 }

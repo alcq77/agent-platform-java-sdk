@@ -1,10 +1,12 @@
 package io.github.alcq77.cqgent.product.sdk.tool;
 
 import io.github.alcq77.cqgent.product.spi.tool.ProductTool;
+import io.github.alcq77.cqgent.product.spi.tool.ProductToolParameterSpec;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 public class CurrentTimeProductTool implements ProductTool {
 
@@ -25,5 +27,15 @@ public class CurrentTimeProductTool implements ProductTool {
     @Override
     public String execute(String userInput) {
         return OffsetDateTime.now(ZoneId.of("Asia/Shanghai")).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    }
+
+    @Override
+    public Map<String, ProductToolParameterSpec> parameterSpecs() {
+        return Map.of();
+    }
+
+    @Override
+    public String execute(Map<String, Object> arguments) {
+        return execute("");
     }
 }

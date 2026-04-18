@@ -5,8 +5,9 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import io.github.alcq77.cqgent.agent.api.dto.AgentChatRequest;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Consumer;
 
 /**
  * 基于 LangChain4j 抽象的 cqgent 运行时门面。
@@ -62,25 +64,8 @@ public class LangChain4jProductAgentRuntime {
     }
 
     public AgentChatResponse chat(AgentChatRequest request, ChatLanguageModel model, String logicalModel) {
-        String sessionId = resolveSessionId(request.getSessionId());
-        PromptTemplate selectedTemplate = resolveTemplate(request.getPromptTemplateId());
-        String systemPromptSource = firstNonBlank(request.getSystemPrompt(),
-                selectedTemplate == null ? null : selectedTemplate.systemPrompt());
-        String userPromptSource = firstNonBlank(request.getMessage(),
-                selectedTemplate == null ? null : selectedTemplate.userMessage());
-        String renderedSystemPrompt = renderTemplate(systemPromptSource, request.getPromptVariables());
-        String renderedMessage = renderTemplate(userPromptSource, request.getPromptVariables());
-        if (renderedMessage == null || renderedMessage.isBlank()) {
-            throw new IllegalStateException("rendered user message is empty");
-        }
-
-        // 读取历史并进入本次会话 memory
-        ProductSessionChatMemory memory = new ProductSessionChatMemory(sessionId, sessionStore);
-        if (renderedSystemPrompt != null && !renderedSystemPrompt.isBlank()) {
-            memory.add(SystemMessage.from(renderedSystemPrompt.trim()));
-        }
-        UserMessage currentUser = UserMessage.from(renderedMessage);
-        memory.add(currentUser);
+        SessionContext ctx = prepareSessionContext(request);
+        ProductSessionChatMemory memory = ctx.memory();
 
         TokenUsage totalUsage = new TokenUsage();
         AiMessage finalAiMessage = null;
@@ -109,13 +94,142 @@ public class LangChain4jProductAgentRuntime {
         // 请求结束后一次性持久化会话消息
         memory.syncToStore();
         return AgentChatResponse.builder()
-                .sessionId(sessionId)
+            .sessionId(ctx.sessionId())
                 .reply(finalAiMessage.text())
                 .inputTokens(totalUsage.inputTokenCount())
                 .outputTokens(totalUsage.outputTokenCount())
                 .totalTokens(totalUsage.totalTokenCount())
                 .traceId(request.getTraceId())
                 .build();
+    }
+
+    /**
+     * 流式对话主链。
+     * <p>
+     * 约束：
+     * - 流式阶段只处理文本增量，不启用工具回路；
+     * - 完成后持久化用户消息与最终助手消息；
+     * - 若模型在结束时返回工具调用请求，则直接报错，避免产生不完整上下文。
+     */
+    public void stream(AgentChatRequest request,
+                       StreamingChatLanguageModel model,
+                       String logicalModel,
+                       Consumer<String> onToken,
+                       Consumer<AgentChatResponse> onComplete,
+                       Consumer<Throwable> onError) {
+        SessionContext ctx = prepareSessionContext(request);
+        ProductSessionChatMemory memory = ctx.memory();
+        TokenUsage totalUsage = new TokenUsage();
+        streamRound(request, model, memory, ctx.sessionId(), 0, totalUsage, onToken, onComplete, onError);
+    }
+
+    /**
+     * 流式轮次执行：
+     * 1) 调用模型获取本轮输出；
+     * 2) 若返回 tool requests，则执行工具并继续下一轮；
+     * 3) 若返回最终文本，则结束并持久化会话。
+     */
+    private void streamRound(AgentChatRequest request,
+                             StreamingChatLanguageModel model,
+                             ProductSessionChatMemory memory,
+                             String sessionId,
+                             int round,
+                             TokenUsage totalUsage,
+                             Consumer<String> onToken,
+                             Consumer<AgentChatResponse> onComplete,
+                             Consumer<Throwable> onError) {
+        if (round >= maxToolCallIterations) {
+            onError.accept(new IllegalStateException("streaming tool loop exceeded max iterations: " + maxToolCallIterations));
+            return;
+        }
+        if (toolRegistry.isEmpty()) {
+            model.generate(memory.messages(), streamingHandler(request, model, memory, sessionId, round, totalUsage,
+                onToken, onComplete, onError));
+            return;
+        }
+        model.generate(memory.messages(), toolRegistry.specifications(), streamingHandler(
+            request, model, memory, sessionId, round, totalUsage, onToken, onComplete, onError
+        ));
+    }
+
+    private StreamingResponseHandler<AiMessage> streamingHandler(AgentChatRequest request,
+                                                                 StreamingChatLanguageModel model,
+                                                                 ProductSessionChatMemory memory,
+                                                                 String sessionId,
+                                                                 int round,
+                                                                 TokenUsage totalUsage,
+                                                                 Consumer<String> onToken,
+                                                                 Consumer<AgentChatResponse> onComplete,
+                                                                 Consumer<Throwable> onError) {
+        return new StreamingResponseHandler<>() {
+            @Override
+            public void onNext(String token) {
+                onToken.accept(token);
+            }
+
+            @Override
+            public void onComplete(Response<AiMessage> response) {
+                TokenUsage usage = response.tokenUsage();
+                TokenUsage mergedUsage = usage == null ? totalUsage : totalUsage.add(usage);
+                AiMessage aiMessage = response.content();
+                if (aiMessage == null) {
+                    onError.accept(new IllegalStateException("streaming response is empty"));
+                    return;
+                }
+                memory.add(aiMessage);
+                if (aiMessage.hasToolExecutionRequests()) {
+                    try {
+                        for (ToolExecutionRequest toolRequest : aiMessage.toolExecutionRequests()) {
+                            String toolResult = toolRegistry.execute(toolRequest);
+                            memory.add(ToolExecutionResultMessage.from(toolRequest, toolResult));
+                        }
+                        streamRound(request, model, memory, sessionId, round + 1, mergedUsage, onToken, onComplete, onError);
+                    } catch (Throwable toolError) {
+                        onError.accept(toolError);
+                    }
+                    return;
+                }
+                if (aiMessage.text() == null) {
+                    onError.accept(new IllegalStateException("streaming final response text is empty"));
+                    return;
+                }
+                memory.syncToStore();
+                onComplete.accept(AgentChatResponse.builder()
+                    .sessionId(sessionId)
+                    .reply(aiMessage.text())
+                    .inputTokens(mergedUsage.inputTokenCount())
+                    .outputTokens(mergedUsage.outputTokenCount())
+                    .totalTokens(mergedUsage.totalTokenCount())
+                    .traceId(request.getTraceId())
+                    .build());
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                onError.accept(throwable);
+            }
+        };
+    }
+
+    private SessionContext prepareSessionContext(AgentChatRequest request) {
+        String sessionId = resolveSessionId(request.getSessionId());
+        PromptTemplate selectedTemplate = resolveTemplate(request.getPromptTemplateId());
+        String systemPromptSource = firstNonBlank(request.getSystemPrompt(),
+            selectedTemplate == null ? null : selectedTemplate.systemPrompt());
+        String userPromptSource = firstNonBlank(request.getMessage(),
+            selectedTemplate == null ? null : selectedTemplate.userMessage());
+        String renderedSystemPrompt = renderTemplate(systemPromptSource, request.getPromptVariables());
+        String renderedMessage = renderTemplate(userPromptSource, request.getPromptVariables());
+        if (renderedMessage == null || renderedMessage.isBlank()) {
+            throw new IllegalStateException("rendered user message is empty");
+        }
+
+        ProductSessionChatMemory memory = new ProductSessionChatMemory(sessionId, sessionStore);
+        if (renderedSystemPrompt != null && !renderedSystemPrompt.isBlank()) {
+            memory.add(SystemMessage.from(renderedSystemPrompt.trim()));
+        }
+        memory.add(UserMessage.from(renderedMessage));
+        return new SessionContext(sessionId, memory);
     }
 
     private String resolveSessionId(String requested) {
@@ -210,5 +324,8 @@ public class LangChain4jProductAgentRuntime {
     }
 
     public record PromptTemplate(String systemPrompt, String userMessage) {
+    }
+
+    private record SessionContext(String sessionId, ProductSessionChatMemory memory) {
     }
 }
