@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
+import io.github.alcq77.cqgent.product.core.observability.AgentRuntimeCounters;
 import io.github.alcq77.cqgent.product.spi.tool.ProductTool;
 import io.github.alcq77.cqgent.product.spi.tool.ProductToolParameterSpec;
 
@@ -14,6 +15,9 @@ import java.util.*;
  * ProductTool 到 LangChain4j ToolSpecification 的适配器。
  */
 public class ProductToolRegistry {
+
+    public static final String PREFIX_VALIDATION = "cqgent.tool.validation: ";
+    public static final String PREFIX_EXECUTION = "cqgent.tool.execution: ";
 
     /**
      * 运行时工具索引（key=toolName）。
@@ -28,7 +32,17 @@ public class ProductToolRegistry {
      */
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * 可选观测计数器；为空时不记录。
+     */
+    private final AgentRuntimeCounters counters;
+
     public ProductToolRegistry(List<ProductTool> tools) {
+        this(tools, null);
+    }
+
+    public ProductToolRegistry(List<ProductTool> tools, AgentRuntimeCounters counters) {
+        this.counters = counters;
         if (tools != null) {
             for (ProductTool tool : tools) {
                 if (tool != null && tool.name() != null && !tool.name().isBlank()) {
@@ -52,11 +66,44 @@ public class ProductToolRegistry {
     public String execute(ToolExecutionRequest request) {
         ProductTool tool = toolMap.get(request.name());
         if (tool == null) {
-            throw new IllegalStateException("tool not found: " + request.name());
+            if (counters != null) {
+                counters.incrementToolValidationFailure();
+            }
+            throw validationException("tool not found: " + request.name());
         }
-        Map<String, Object> arguments = parseArguments(request.arguments());
-        validateArguments(tool, arguments);
-        return tool.execute(arguments);
+        Map<String, Object> arguments;
+        try {
+            arguments = parseArguments(request.arguments());
+            validateArguments(tool, arguments);
+        } catch (RuntimeException ex) {
+            if (counters != null) {
+                counters.incrementToolValidationFailure();
+            }
+            throw validationException(ex.getMessage(), ex);
+        }
+        if (counters != null) {
+            counters.incrementToolInvocation();
+        }
+        try {
+            return tool.execute(arguments);
+        } catch (RuntimeException ex) {
+            if (counters != null) {
+                counters.incrementToolExecutionFailure();
+            }
+            throw executionException(ex.getMessage(), ex);
+        }
+    }
+
+    private static IllegalStateException validationException(String message) {
+        return new IllegalStateException(PREFIX_VALIDATION + message);
+    }
+
+    private static IllegalStateException validationException(String message, Throwable cause) {
+        return new IllegalStateException(PREFIX_VALIDATION + message, cause);
+    }
+
+    private static IllegalStateException executionException(String message, Throwable cause) {
+        return new IllegalStateException(PREFIX_EXECUTION + message, cause);
     }
 
     private static ToolSpecification toSpecification(ProductTool tool) {

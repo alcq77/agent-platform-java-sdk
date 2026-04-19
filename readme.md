@@ -17,6 +17,8 @@
 ## Features
 
 - 模型路由（逻辑模型、主备、加权、健康感知）
+- 运行时观测：`EmbeddedAgentClient.runtimeMetrics()` 合并熔断/路由失败分类、`promptTemplates` 打点，以及 LangChain4j
+  工具层的同步/流式调用次数、`toolInvocations`、`toolValidationFailures`、`toolExecutionFailures`
 - 基于 LangChain4j 的 Agent 主链与 tool-calling 适配层
 - 会话管理（内置内存/文件系统 + Redis/JDBC 存储）
 - 插件与技能目录加载（workspace + plugins + skills）

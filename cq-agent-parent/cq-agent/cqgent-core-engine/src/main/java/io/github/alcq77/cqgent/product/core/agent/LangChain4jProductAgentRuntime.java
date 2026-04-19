@@ -12,15 +12,13 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import io.github.alcq77.cqgent.agent.api.dto.AgentChatRequest;
 import io.github.alcq77.cqgent.agent.api.dto.AgentChatResponse;
+import io.github.alcq77.cqgent.product.core.observability.AgentRuntimeCounters;
 import io.github.alcq77.cqgent.product.core.session.ProductSessionChatMemory;
 import io.github.alcq77.cqgent.product.core.tool.ProductToolRegistry;
 import io.github.alcq77.cqgent.product.spi.session.ProductSessionStore;
 import io.github.alcq77.cqgent.product.spi.tool.ProductTool;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
@@ -49,18 +47,29 @@ public class LangChain4jProductAgentRuntime {
     private final LongAdder templateFallbackCount = new LongAdder();
     private final LongAdder templateMissingCount = new LongAdder();
 
+    /**
+     * 与工具层共用的运行时计数器（同步/流式调用在 SDK 外壳累加）。
+     */
+    private final AgentRuntimeCounters runtimeCounters;
+
     public LangChain4jProductAgentRuntime(ProductSessionStore sessionStore,
                                           List<ProductTool> tools,
                                           int maxToolCallIterations,
                                           Map<String, PromptTemplate> promptTemplates,
                                           String defaultPromptTemplateId,
-                                          boolean fallbackToDefaultPromptTemplate) {
+                                          boolean fallbackToDefaultPromptTemplate,
+                                          AgentRuntimeCounters runtimeCounters) {
         this.sessionStore = sessionStore;
-        this.toolRegistry = new ProductToolRegistry(tools);
+        this.runtimeCounters = Objects.requireNonNull(runtimeCounters, "runtimeCounters");
+        this.toolRegistry = new ProductToolRegistry(tools, runtimeCounters);
         this.maxToolCallIterations = Math.max(1, maxToolCallIterations);
         this.promptTemplates = promptTemplates == null ? Map.of() : promptTemplates;
         this.defaultPromptTemplateId = defaultPromptTemplateId;
         this.fallbackToDefaultPromptTemplate = fallbackToDefaultPromptTemplate;
+    }
+
+    public AgentRuntimeCounters runtimeCounters() {
+        return runtimeCounters;
     }
 
     public AgentChatResponse chat(AgentChatRequest request, ChatLanguageModel model, String logicalModel) {
@@ -104,12 +113,9 @@ public class LangChain4jProductAgentRuntime {
     }
 
     /**
-     * 流式对话主链。
+     * 流式对话主链（支持工具多轮：工具执行后继续调用模型直至产出最终文本）。
      * <p>
-     * 约束：
-     * - 流式阶段只处理文本增量，不启用工具回路；
-     * - 完成后持久化用户消息与最终助手消息；
-     * - 若模型在结束时返回工具调用请求，则直接报错，避免产生不完整上下文。
+     * 完成后持久化会话；达到 {@link #maxToolCallIterations} 仍未结束时通过 onError 上报。
      */
     public void stream(AgentChatRequest request,
                        StreamingChatLanguageModel model,

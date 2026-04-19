@@ -1,5 +1,6 @@
 package io.github.alcq77.cqgent.product.core.agent;
 
+import io.github.alcq77.cqgent.product.core.observability.AgentRuntimeCounters;
 import io.github.alcq77.cqgent.product.spi.session.ProductSessionStore;
 import io.github.alcq77.cqgent.product.spi.tool.ProductTool;
 
@@ -24,6 +25,6 @@ public class ProductAgentEngine extends LangChain4jProductAgentRuntime {
                               String defaultPromptTemplateId,
                               boolean fallbackToDefaultPromptTemplate) {
         super(sessionStore, tools, maxToolCallIterations, promptTemplates, defaultPromptTemplateId,
-                fallbackToDefaultPromptTemplate);
+            fallbackToDefaultPromptTemplate, new AgentRuntimeCounters());
     }
 }

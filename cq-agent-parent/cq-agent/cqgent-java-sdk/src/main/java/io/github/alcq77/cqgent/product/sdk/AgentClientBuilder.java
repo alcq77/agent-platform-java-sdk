@@ -3,6 +3,7 @@ package io.github.alcq77.cqgent.product.sdk;
 import io.github.alcq77.cqgent.product.core.agent.LangChain4jProductAgentRuntime;
 import io.github.alcq77.cqgent.product.core.model.ProductModelRouter;
 import io.github.alcq77.cqgent.product.core.model.RoutePolicy;
+import io.github.alcq77.cqgent.product.core.observability.AgentRuntimeCounters;
 import io.github.alcq77.cqgent.product.core.session.InMemoryProductSessionStore;
 import io.github.alcq77.cqgent.product.sdk.internal.EmbeddedAgentClient;
 import io.github.alcq77.cqgent.product.sdk.provider.OpenAiCompatibleProductProvider;
@@ -215,13 +216,15 @@ public class AgentClientBuilder {
                 templateId,
                 new LangChain4jProductAgentRuntime.PromptTemplate(template.getSystemPrompt(), template.getUserMessage())
         ));
+        AgentRuntimeCounters runtimeCounters = new AgentRuntimeCounters();
         LangChain4jProductAgentRuntime runtime = new LangChain4jProductAgentRuntime(
                 store,
                 tools,
                 options.getMaxToolCallIterations(),
                 promptTemplates,
                 options.getDefaultPromptTemplateId(),
-                options.isFallbackToDefaultPromptTemplate()
+            options.isFallbackToDefaultPromptTemplate(),
+            runtimeCounters
         );
         return new EmbeddedAgentClient(options, router, runtime, providers);
     }

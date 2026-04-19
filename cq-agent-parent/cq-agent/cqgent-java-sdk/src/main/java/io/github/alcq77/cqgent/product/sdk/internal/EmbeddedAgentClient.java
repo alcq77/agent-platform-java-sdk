@@ -6,6 +6,7 @@ import io.github.alcq77.cqgent.agent.api.dto.AgentChatRequest;
 import io.github.alcq77.cqgent.agent.api.dto.AgentChatResponse;
 import io.github.alcq77.cqgent.product.core.agent.LangChain4jProductAgentRuntime;
 import io.github.alcq77.cqgent.product.core.model.ProductModelRouter;
+import io.github.alcq77.cqgent.product.core.tool.ProductToolRegistry;
 import io.github.alcq77.cqgent.product.sdk.AgentClient;
 import io.github.alcq77.cqgent.product.sdk.AgentStreamingListener;
 import io.github.alcq77.cqgent.product.sdk.ProductSdkOptions;
@@ -97,6 +98,7 @@ public class EmbeddedAgentClient implements AgentClient, CircuitBreakerSnapshotP
     @Override
     public void stream(AgentChatRequest request, AgentStreamingListener listener) {
         totalRequests.increment();
+        runtime.runtimeCounters().incrementStreamingInvocation();
         String traceId = resolveTraceId(request);
         String logicalModel = options.getLogicalModel();
         List<ProductEndpointConfig> candidates = modelRouter.resolveCandidates(
@@ -182,7 +184,14 @@ public class EmbeddedAgentClient implements AgentClient, CircuitBreakerSnapshotP
     }
 
     private static String classifyFailureType(RuntimeException ex) {
-        String message = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
+        String raw = ex.getMessage() == null ? "" : ex.getMessage();
+        if (raw.startsWith(ProductToolRegistry.PREFIX_VALIDATION)) {
+            return "tool_validation";
+        }
+        if (raw.startsWith(ProductToolRegistry.PREFIX_EXECUTION)) {
+            return "tool_execution";
+        }
+        String message = raw.toLowerCase();
         if (message.contains("timeout")) {
             return "timeout";
         }
