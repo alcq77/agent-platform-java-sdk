@@ -17,9 +17,12 @@
 ## Features
 
 - 模型路由（逻辑模型、主备、加权、健康感知）
+- 按 `taskType/tags` 的多模型动态分流（P1）
 - 运行时观测：`EmbeddedAgentClient.runtimeMetrics()` 合并熔断/路由失败分类、`promptTemplates` 打点，以及 LangChain4j
   工具层的同步/流式调用次数、`toolInvocations`、`toolValidationFailures`、`toolExecutionFailures`
 - 基于 LangChain4j 的 Agent 主链与 tool-calling 适配层
+- Advisor/Interceptor 统一增强链（提示注入、上下文裁剪、安全过滤、审计可插拔）
+- RAG 基础能力（文档导入、切分、embedding、检索、上下文注入）
 - 会话管理（内置内存/文件系统 + Redis/JDBC 存储）
 - 插件与技能目录加载（workspace + plugins + skills）
 - Spring Boot 自动装配与健康检查（含 `cqgentSessionStore` Actuator 端点）
@@ -41,13 +44,13 @@
 
 ## Project Layout
 
-> 说明：源码主目录为 `cqgent`。
+> 说明：主工程目录为 `cq-agent-parent/cq-agent`。
 
-- `cqgent-java-sdk`：SDK（源码位于 `cqgent/product/cqgent-java-sdk`）
-- `cqgent-spring-boot-starter`：Starter（源码位于 `cqgent/product/cqgent-spring-boot-starter`）
-- `cqgent-core-engine`：基于 LangChain4j 的核心运行时（源码位于 `cqgent/product/cqgent-core-engine`）
-- `cqgent-spi`：扩展接口（源码位于 `cqgent/product/cqgent-spi`）
-- `cqgent-plugins`：插件示例（源码位于 `cqgent/product/cqgent-plugins`）
+- `cqagent-java-sdk`：SDK（`cq-agent-parent/cq-agent/cqagent-java-sdk`）
+- `cqagent-spring-boot-starter`：Starter（`cq-agent-parent/cq-agent/cqagent-spring-boot-starter`）
+- `cqagent-core-engine`：基于 LangChain4j 的核心运行时（`cq-agent-parent/cq-agent/cqagent-core-engine`）
+- `cqagent-spi`：扩展接口（`cq-agent-parent/cq-agent/cqagent-spi`）
+- `cqagent-plugins`：插件示例（`cq-agent-parent/cq-agent/cqagent-plugins`）
 
 ## Build
 
@@ -57,7 +60,7 @@ Requirements:
 - Maven 3.9+
 
 ```bash
-cd cqgent
+cd cq-agent-parent
 mvn -q clean compile -DskipTests
 ```
 

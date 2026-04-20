@@ -6,22 +6,16 @@
 
     <parent>
         <groupId>io.github.alcq77.cqgent</groupId>
-        <artifactId>cq-agent-parent</artifactId>
+        <artifactId>cq-agent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>cq-agent</artifactId>
+    <artifactId>cqagent-plugins</artifactId>
     <packaging>pom</packaging>
-    <name>cqgent</name>
-    <description>cqgent distribution: core / sdk / starter</description>
+    <name>cqgent-plugins</name>
 
     <modules>
-        <module>cqagent-spi</module>
-        <module>cqagent-core-engine</module>
-        <module>cqagent-java-sdk</module>
-        <module>cqagent-spring-boot-starter</module>
-        <module>cqagent-plugins</module>
-        <module>cqagent-test-kit</module>
+        <module>cqgent-plugin-time</module>
     </modules>
 </project>

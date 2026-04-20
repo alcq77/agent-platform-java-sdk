@@ -7,7 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,4 +53,15 @@ public class AgentChatRequest {
      */
     @Builder.Default
     private Map<String, String> promptVariables = new LinkedHashMap<>();
+
+    /**
+     * 任务类型标签（如 qa / coding / summarization），用于策略路由。
+     */
+    private String taskType;
+
+    /**
+     * 任务附加标签（如 tenant:vip、lang:zh）。
+     */
+    @Builder.Default
+    private List<String> tags = new ArrayList<>();
 }
