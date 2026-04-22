@@ -11,7 +11,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>cq-agent</artifactId>
+    <artifactId>cqagent</artifactId>
     <packaging>pom</packaging>
     <name>cqgent</name>
     <description>cqgent distribution: core / sdk / starter</description>

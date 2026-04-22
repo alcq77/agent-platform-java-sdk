@@ -1,9 +1,9 @@
-package io.github.alcq77.cqgent.product.sdk.internal;
+package com.agent.platform.product.sdk.internal;
 
+import io.github.alcq77.cqagent.product.sdk.internal.EndpointCircuitBreaker;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class EndpointCircuitBreakerTest {
 

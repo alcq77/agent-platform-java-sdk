@@ -1,11 +1,12 @@
 package io.github.alcq77.cqgent.product.core.agent;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import io.github.alcq77.cqgent.agent.api.dto.AgentChatRequest;
-import io.github.alcq77.cqgent.product.core.observability.AgentRuntimeCounters;
-import io.github.alcq77.cqgent.product.core.session.InMemoryProductSessionStore;
-import io.github.alcq77.cqgent.product.core.tool.ProductToolRegistry;
-import io.github.alcq77.cqgent.product.spi.tool.ProductTool;
+import io.github.alcq77.cqagent.agent.api.dto.AgentChatRequest;
+import io.github.alcq77.cqagent.product.core.agent.LangChain4jProductAgentRuntime;
+import io.github.alcq77.cqagent.product.core.observability.AgentRuntimeCounters;
+import io.github.alcq77.cqagent.product.core.session.InMemoryProductSessionStore;
+import io.github.alcq77.cqagent.product.core.tool.ProductToolRegistry;
+import io.github.alcq77.cqagent.product.spi.tool.ProductTool;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

@@ -1,5 +1,8 @@
 package io.github.alcq77.cqgent.product.starter;
 
+import io.github.alcq77.cqagent.product.starter.ProductStarterProperties;
+import io.github.alcq77.cqagent.product.starter.WorkspaceSkillsRegistry;
+import io.github.alcq77.cqagent.product.starter.WorkspaceSkillsTool;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
