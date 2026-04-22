@@ -2,6 +2,7 @@ package io.github.alcq77.cqgent.product.core.runtime.advisor;
 
 import io.github.alcq77.cqgent.agent.api.dto.AgentChatRequest;
 import io.github.alcq77.cqgent.product.core.rag.RagChunk;
+import io.github.alcq77.cqgent.product.core.rag.RagRetrievalFilter;
 import io.github.alcq77.cqgent.product.core.rag.RagRetriever;
 
 import java.util.List;
@@ -14,11 +15,17 @@ public class RagContextAdvisor implements AgentRuntimeAdvisor {
     private final RagRetriever retriever;
     private final int topK;
     private final int order;
+    private final RagRetrievalFilter filter;
 
     public RagContextAdvisor(RagRetriever retriever, int topK, int order) {
+        this(retriever, topK, order, null);
+    }
+
+    public RagContextAdvisor(RagRetriever retriever, int topK, int order, RagRetrievalFilter filter) {
         this.retriever = retriever;
         this.topK = Math.max(1, topK);
         this.order = order;
+        this.filter = filter;
     }
 
     @Override
@@ -31,7 +38,7 @@ public class RagContextAdvisor implements AgentRuntimeAdvisor {
         if (request == null || request.getMessage() == null || request.getMessage().isBlank()) {
             return request;
         }
-        List<RagChunk> chunks = retriever.retrieve(request.getMessage(), topK);
+        List<RagChunk> chunks = retriever.retrieve(request.getMessage(), topK, filter);
         if (chunks.isEmpty()) {
             return request;
         }

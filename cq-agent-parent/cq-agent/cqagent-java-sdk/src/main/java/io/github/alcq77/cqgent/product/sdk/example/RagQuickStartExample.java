@@ -7,8 +7,8 @@ import io.github.alcq77.cqgent.product.sdk.AgentClient;
 import io.github.alcq77.cqgent.product.sdk.AgentClientBuilder;
 import io.github.alcq77.cqgent.product.spi.model.ProductEndpointConfig;
 
+import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 本地知识库问答最小示例。
@@ -22,10 +22,13 @@ public final class RagQuickStartExample {
         InMemoryRagStore store = new InMemoryRagStore();
         TextEmbeddingModel embeddingModel = new SimpleHashEmbeddingModel(128);
         RagIndexer indexer = new RagIndexer(new RagChunkSplitter(400, 80), embeddingModel, store);
-        indexer.rebuild(List.of(
-            new RagDocument("doc-1", "退款规则", "订单支付后 7 天内支持无理由退款，超过 7 天需人工审核。", Map.of("topic", "refund")),
-            new RagDocument("doc-2", "会员规则", "VIP 用户享受 95 折优惠，续费后即时生效。", Map.of("topic", "vip"))
-        ));
+        Path kbDir = args.length > 0 ? Path.of(args[0]) : Path.of("./workspace/knowledge");
+        RagLocalFileImporter importer = new RagLocalFileImporter();
+        List<RagDocument> docs = importer.load(kbDir);
+        if (docs.isEmpty()) {
+            throw new IllegalStateException("knowledge directory is empty: " + kbDir.toAbsolutePath());
+        }
+        indexer.syncIncremental(kbDir, importer, new RagIndexMetadataStore(Path.of("./workspace/rag/index-manifest.json")));
 
         RagRetriever retriever = new RagRetriever(store, embeddingModel);
         RagContextAdvisor advisor = new RagContextAdvisor(retriever, 2, -100);

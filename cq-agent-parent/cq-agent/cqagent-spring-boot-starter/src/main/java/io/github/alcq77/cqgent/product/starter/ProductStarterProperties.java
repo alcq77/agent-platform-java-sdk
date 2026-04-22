@@ -53,6 +53,8 @@ public class ProductStarterProperties {
 
     private Prompts prompts = new Prompts();
 
+    private Rag rag = new Rag();
+
     @Data
     public static class Endpoint {
         private String provider = "openai_compat";
@@ -133,5 +135,39 @@ public class ProductStarterProperties {
         private String version;
         private String systemPrompt;
         private String userMessage;
+    }
+
+    @Data
+    public static class Rag {
+        /**
+         * 是否启用 RAG 增强 advisor。
+         */
+        private boolean enabled = false;
+        /**
+         * 本地知识库目录。
+         */
+        private String knowledgeDirectory = "./workspace/knowledge";
+        /**
+         * 索引清单文件路径。
+         */
+        private String manifestPath = "./workspace/rag/index-manifest.json";
+        /**
+         * 切分参数。
+         */
+        private int chunkSize = 400;
+        private int overlap = 80;
+        /**
+         * 检索参数。
+         */
+        private int topK = 4;
+        private int advisorOrder = -100;
+        /**
+         * 过滤条件：source 字符串包含匹配。
+         */
+        private java.util.List<String> allowedSources = new java.util.ArrayList<>();
+        /**
+         * 过滤条件：metadata 等值匹配。
+         */
+        private java.util.Map<String, String> metadataEquals = new java.util.LinkedHashMap<>();
     }
 }

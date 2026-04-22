@@ -1,7 +1,9 @@
 package io.github.alcq77.cqgent.product.starter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.alcq77.cqgent.product.core.rag.*;
 import io.github.alcq77.cqgent.product.core.runtime.advisor.AgentRuntimeAdvisor;
+import io.github.alcq77.cqgent.product.core.runtime.advisor.RagContextAdvisor;
 import io.github.alcq77.cqgent.product.core.session.InMemoryProductSessionStore;
 import io.github.alcq77.cqgent.product.sdk.AgentClient;
 import io.github.alcq77.cqgent.product.sdk.AgentClientBuilder;
@@ -25,6 +27,8 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
+
+import java.nio.file.Path;
 
 @AutoConfiguration
 @ConditionalOnClass(AgentClient.class)
@@ -215,5 +219,70 @@ public class ProductAgentAutoConfiguration {
     @ConditionalOnMissingBean(ProductAgentExceptionHandler.class)
     public ProductAgentExceptionHandler productAgentExceptionHandler() {
         return new ProductAgentExceptionHandler();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "agent.product.rag", name = "enabled", havingValue = "true")
+    @ConditionalOnMissingBean
+    public TextEmbeddingModel ragEmbeddingModel() {
+        return new SimpleHashEmbeddingModel(128);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "agent.product.rag", name = "enabled", havingValue = "true")
+    @ConditionalOnMissingBean
+    public InMemoryRagStore inMemoryRagStore() {
+        return new InMemoryRagStore();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "agent.product.rag", name = "enabled", havingValue = "true")
+    @ConditionalOnMissingBean
+    public RagLocalFileImporter ragLocalFileImporter() {
+        return new RagLocalFileImporter();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "agent.product.rag", name = "enabled", havingValue = "true")
+    @ConditionalOnMissingBean
+    public RagIndexer ragIndexer(ProductStarterProperties properties,
+                                 TextEmbeddingModel embeddingModel,
+                                 InMemoryRagStore store,
+                                 RagLocalFileImporter importer) {
+        RagChunkSplitter splitter = new RagChunkSplitter(
+            properties.getRag().getChunkSize(),
+            properties.getRag().getOverlap()
+        );
+        RagIndexer indexer = new RagIndexer(splitter, embeddingModel, store);
+        indexer.syncIncremental(
+            Path.of(properties.getRag().getKnowledgeDirectory()),
+            importer,
+            new RagIndexMetadataStore(Path.of(properties.getRag().getManifestPath()))
+        );
+        return indexer;
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "agent.product.rag", name = "enabled", havingValue = "true")
+    @ConditionalOnMissingBean
+    public RagRetriever ragRetriever(InMemoryRagStore store, TextEmbeddingModel embeddingModel) {
+        return new RagRetriever(store, embeddingModel);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "agent.product.rag", name = "enabled", havingValue = "true")
+    @ConditionalOnMissingBean(name = "ragContextAdvisor")
+    public AgentRuntimeAdvisor ragContextAdvisor(ProductStarterProperties properties,
+                                                 RagRetriever retriever,
+                                                 RagIndexer ignoredIndexer) {
+        RagRetrievalFilter filter = new RagRetrievalFilter()
+            .allowedSources(properties.getRag().getAllowedSources())
+            .equalsMetadata(properties.getRag().getMetadataEquals());
+        return new RagContextAdvisor(
+            retriever,
+            properties.getRag().getTopK(),
+            properties.getRag().getAdvisorOrder(),
+            filter
+        );
     }
 }

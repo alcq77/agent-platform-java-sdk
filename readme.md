@@ -23,6 +23,9 @@
 - 基于 LangChain4j 的 Agent 主链与 tool-calling 适配层
 - Advisor/Interceptor 统一增强链（提示注入、上下文裁剪、安全过滤、审计可插拔）
 - RAG 基础能力（文档导入、切分、embedding、检索、上下文注入）
+- RAG 本地知识库目录导入（`workspace/knowledge` 下 `md/txt`）
+- RAG 增量索引与清单持久化（`workspace/rag/index-manifest.json`）
+- Starter 支持 `agent.product.rag.*` 配置化自动装配 RAG Advisor（含 metadata/source 过滤）
 - 会话管理（内置内存/文件系统 + Redis/JDBC 存储）
 - 插件与技能目录加载（workspace + plugins + skills）
 - Spring Boot 自动装配与健康检查（含 `cqgentSessionStore` Actuator 端点）
