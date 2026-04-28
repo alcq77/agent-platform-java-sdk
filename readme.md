@@ -1,60 +1,38 @@
-# AI Agent Java SDK (Preview)
+﻿# AI Agent Java SDK (Preview)
 
 [CI Compile Check](https://github.com/alcq77/agent-platform-java-sdk/actions/workflows/ci-compile.yml)
 
-一个面向 Java 的轻量 Agent 开发工具包。  
-目标是让项目通过 **SDK / Spring Boot Starter** 方式快速集成 Agent 能力，而不是先搭一整套独立平台。
-
-> 当前仓库仍在慢速迭代中，会继续优化。欢迎反馈和建议。
-
+娑撯偓娑擃亪娼伴崥?Java 閻ㄥ嫯浜ら柌?Agent 瀵偓閸欐垵浼愰崗宄板瘶閵? 
+閻╊喗鐖ｉ弰顖濐唨妞ゅ湱娲伴柅姘崇箖 **SDK / Spring Boot Starter** 閺傜懓绱¤箛顐︹偓鐔兼肠閹?Agent 閼宠棄濮忛敍宀冣偓灞肩瑝閺勵垰鍘涢幖顓濈閺佹潙顨滈悪顒傜彌楠炲啿褰撮妴?
+> 瑜版挸澧犳禒鎾崇氨娴犲秴婀幈銏も偓鐔诲嚡娴狅絼鑵戦敍灞肩窗缂佈呯敾娴兼ê瀵查妴鍌涱偨鏉╁骸寮芥＃鍫濇嫲瀵ら缚顔呴妴?
 ## Why This Project
 
-- 尽量少依赖：优先内嵌能力，减少额外部署成本
-- 易扩展：模型、工具、会话存储都提供 SPI
-- 可控：支持路由、熔断、工具调用安全校验
-- 可落地：提供 Starter 和示例工程，便于直接接入
+- 鐏忎粙鍣虹亸鎴滅贩鐠ф牭绱版导妯哄帥閸愬懎绁甸懗钘夊閿涘苯鍣虹亸鎴︻杺婢舵牠鍎寸純鍙夊灇閺?- 閺勬挻澧跨仦鏇窗濡€崇€烽妴浣镐紣閸忔灚鈧椒绱扮拠婵嗙摠閸屻劑鍏橀幓鎰返 SPI
+- 閸欘垱甯堕敍姘暜閹镐浇鐭鹃悽渚库偓浣哄晬閺傤厹鈧礁浼愰崗鐤殶閻劌鐣ㄩ崗銊︾墡妤?- 閸欘垵鎯ら崷甯窗閹绘劒绶?Starter 閸滃瞼銇氭笟瀣紣缁嬪绱濇笟澶哥艾閻╁瓨甯撮幒銉ュ弳
 
 ## Features
 
-- 模型路由（逻辑模型、主备、加权、健康感知）
-- 按 `taskType/tags` 的多模型动态分流（P1）
-- 运行时观测：`EmbeddedAgentClient.runtimeMetrics()` 合并熔断/路由失败分类、`promptTemplates` 打点，以及 LangChain4j
-  工具层的同步/流式调用次数、`toolInvocations`、`toolValidationFailures`、`toolExecutionFailures`
-- 基于 LangChain4j 的 Agent 主链与 tool-calling 适配层
-- Advisor/Interceptor 统一增强链（提示注入、上下文裁剪、安全过滤、审计可插拔）
-- RAG 基础能力（文档导入、切分、embedding、检索、上下文注入）
-- RAG 本地知识库目录导入（`workspace/knowledge` 下 `md/txt`）
-- RAG 增量索引与清单持久化（`workspace/rag/index-manifest.json`）
-- Starter 支持 `agent.product.rag.*` 配置化自动装配 RAG Advisor（含 metadata/source 过滤）
-- 会话管理（内置内存/文件系统 + Redis/JDBC 存储）
-- 插件与技能目录加载（workspace + plugins + skills）
-- Spring Boot 自动装配与健康检查（含 `cqgentSessionStore` Actuator 端点）
-
+- 濡€崇€风捄顖滄暠閿涘牓鈧槒绶Ο鈥崇€烽妴浣峰瘜婢跺洢鈧礁濮為弶鍐︹偓浣镐淮鎼撮攱鍔呴惌銉礆
+- 閹?`taskType/tags` 閻ㄥ嫬顦垮Ο鈥崇€烽崝銊︹偓浣稿瀻濞翠緤绱橮1閿?- 鏉╂劘顢戦弮鎯邦潎濞村绱癭EmbeddedAgentClient.runtimeMetrics()` 閸氬牆鑻熼悢鏃€鏌?鐠侯垳鏁辨径杈Е閸掑棛琚妴涔romptTemplates` 閹垫挾鍋ｉ敍灞间簰閸?LangChain4j
+  瀹搞儱鍙跨仦鍌滄畱閸氬本顒?濞翠礁绱＄拫鍐暏濞嗏剝鏆熼妴涔oolInvocations`閵嗕梗toolValidationFailures`閵嗕梗toolExecutionFailures`
+- 閸╄桨绨?LangChain4j 閻?Agent 娑撳鎽兼稉?tool-calling 闁倿鍘ょ仦?- Advisor/Interceptor 缂佺喍绔存晶鐐插繁闁炬拝绱欓幓鎰仛濞夈劌鍙嗛妴浣风瑐娑撳鏋冪憗浣稿閵嗕礁鐣ㄩ崗銊ㄧ箖濠娿們鈧礁顓哥拋鈥冲讲閹绘帗瀚堥敍?- RAG 閸╄櫣顢呴懗钘夊閿涘牊鏋冨锝咁嚤閸忋儯鈧礁鍨忛崚鍡愨偓涔猰bedding閵嗕焦顥呯槐顫偓浣风瑐娑撳鏋冨▔銊ュ弳閿?- RAG 閺堫剙婀撮惌銉ㄧ槕鎼存挾娲拌ぐ鏇烆嚤閸忋儻绱檂workspace/knowledge` 娑?`md/txt`閿?- RAG 婢х偤鍣虹槐銏犵穿娑撳孩绔婚崡鏇熷瘮娑斿懎瀵查敍鍧剋orkspace/rag/index-manifest.json`閿?- Starter 閺€顖涘瘮 `agent.product.rag.*` 闁板秶鐤嗛崠鏍殰閸斻劏顥婇柊?RAG Advisor閿涘牆鎯?metadata/source 鏉╁洦鎶ら敍?- RAG 閻戭厽娲块弬甯窗閸氼垰濮╅崥搴＄暰閺冭泛顤冮柌蹇撳煕閺傚府绱遍崑銉ユ倣濡偓閺屻儴绶崙鐑樻瀮濡楋絾鏆?閸掑棗娼￠弫?閺堚偓閸氬海鍌ㄥ鏇熸闂?- 娴兼俺鐦界粻锛勬倞閿涘牆鍞寸純顔煎敶鐎?閺傚洣娆㈢化鑽ょ埠 + Redis/JDBC 鐎涙ê鍋嶉敍?- 閹绘帊娆㈡稉搴㈠Η閼崇晫娲拌ぐ鏇炲鏉炴枻绱檞orkspace + plugins + skills閿?- Spring Boot 閼奉亜濮╃憗鍛村帳娑撳骸浠存惔閿嬵梾閺屻儻绱欓崥?`cqagentSessionStore` Actuator 缁旑垳鍋ｉ敍?
 ## Quick Start
 
-### Spring Boot Starter
+- 娑撹鍙嗛崣锝忕窗`[docs/product/quick-start-10min.md](docs/product/quick-start-10min.md)`
 
-见：`[docs/product/quick-start-starter.md](docs/product/quick-start-starter.md)`
+### Spring Boot Starter閿涘牐顕涚紒鍡欏閿?
+鐟欎緤绱癭[docs/product/quick-start-starter.md](docs/product/quick-start-starter.md)`
 
-### Java SDK
-
-见：`[docs/product/quick-start-sdk.md](docs/product/quick-start-sdk.md)`
+### Java SDK閿涘牐顕涚紒鍡欏閿?
+鐟欎緤绱癭[docs/product/quick-start-sdk.md](docs/product/quick-start-sdk.md)`
 
 ## Examples
 
-- `examples/java-sdk-demo`：纯 Java 最小示例
-- `examples/spring-starter-demo`：Spring Boot 最小示例
-
+- `examples/java-sdk-demo`閿涙氨鍑?Java 閺堚偓鐏忓繒銇氭笟?- `examples/spring-starter-demo`閿涙瓔pring Boot 閺堚偓鐏忓繒銇氭笟?
 ## Project Layout
 
-> 说明：主工程目录为 `cq-agent-parent/cq-agent`。
-
-- `cqagent-java-sdk`：SDK（`cq-agent-parent/cq-agent/cqagent-java-sdk`）
-- `cqagent-spring-boot-starter`：Starter（`cq-agent-parent/cq-agent/cqagent-spring-boot-starter`）
-- `cqagent-core-engine`：基于 LangChain4j 的核心运行时（`cq-agent-parent/cq-agent/cqagent-core-engine`）
-- `cqagent-spi`：扩展接口（`cq-agent-parent/cq-agent/cqagent-spi`）
-- `cqagent-plugins`：插件示例（`cq-agent-parent/cq-agent/cqagent-plugins`）
-
+> 鐠囧瓨妲戦敍姘瘜瀹搞儳鈻奸惄顔肩秿娑?`cq-agent-parent/cq-agent`閵?
+- `cqagent-java-sdk`閿涙瓔DK閿涘潉cq-agent-parent/cq-agent/cqagent-java-sdk`閿?- `cqagent-spring-boot-starter`閿涙瓔tarter閿涘潉cq-agent-parent/cq-agent/cqagent-spring-boot-starter`閿?- `cqagent-core-engine`閿涙艾鐔€娴?LangChain4j 閻ㄥ嫭鐗宠箛鍐箥鐞涘本妞傞敍鍧刢q-agent-parent/cq-agent/cqagent-core-engine`閿?- `cqagent-spi`閿涙碍澧跨仦鏇熷复閸欙綇绱檂cq-agent-parent/cq-agent/cqagent-spi`閿?- `cqagent-plugins`閿涙碍褰冩禒鍓併仛娓氬绱檂cq-agent-parent/cq-agent/cqagent-plugins`閿?
 ## Build
 
 Requirements:
@@ -69,28 +47,27 @@ mvn -q clean compile -DskipTests
 
 ## Code Conventions
 
-- 新增运行时链路代码时，优先补齐类/方法注释，说明“职责边界 + 调用顺序”
-- 关键分支（路由、重试、熔断、工具调用）增加简短行内注释，便于排障
-- 对外 SPI 保持语义稳定；破坏性调整需给出兼容层或迁移提示
-
+- 閺傛澘顤冩潻鎰攽閺冨爼鎽肩捄顖欏敩閻焦妞傞敍灞肩喘閸忓牐藟姒绘劗琚?閺傝纭跺▔銊╁櫞閿涘矁顕╅弰搴樷偓婊嗕捍鐠愶綀绔熼悾?+ 鐠嬪啰鏁ゆい鍝勭碍閳?- 閸忔娊鏁崚鍡樻暜閿涘牐鐭鹃悽渚库偓渚€鍣哥拠鏇樷偓浣哄晬閺傤厹鈧礁浼愰崗鐤殶閻㈩煉绱氭晶鐐插缁犫偓閻叀顢戦崘鍛暈闁插绱濇笟澶哥艾閹烘帡娈?- 鐎电懓顦?SPI 娣囨繃瀵旂拠顓濈疅缁嬪啿鐣鹃敍娑氱壃閸у繑鈧嗙殶閺佹挳娓剁紒娆忓毉閸忕厧顔愮仦鍌涘灗鏉╀胶些閹绘劗銇?
 ## Docs
 
-- [配置参考](docs/product/config-reference.md)
-- [核心功能基线](docs/product/core-capabilities.md)
-- [API 参考](docs/product/api-reference.md)
-- [SPI 扩展](docs/product/spi-extension.md)
-- [Workspace 规范](docs/product/workspace-layout.md)
-- [迁移指南](docs/product/migration-guide.md)
-- [发布治理](docs/product/release-governance.md)
+- [闁板秶鐤嗛崣鍌濃偓鍍?docs/product/config-reference.md)
+- [10閸掑棝鎸撻幒銉ュ弳閹稿洤宕(docs/product/quick-start-10min.md)
+- [閺嶇绺鹃崝鐔诲厴閸╄櫣鍤嶿(docs/product/core-capabilities.md)
+- [Current Roadmap](docs/product/current-roadmap.md)
+- [API 閸欏倽鈧儩(docs/product/api-reference.md)
+- [SPI 閹碘晛鐫峕(docs/product/spi-extension.md)
+- [Workspace 鐟欏嫯瀵朷(docs/product/workspace-layout.md)
+- [鏉╀胶些閹稿洤宕(docs/product/migration-guide.md)
+- [閸欐垵绔峰▽鑽ゆ倞](docs/product/release-governance.md)
 
 ## Roadmap
 
-- 更完善的工具调用协议与观测
-- 更细粒度的路由与熔断策略
-- Redis / DB 会话存储插件
-- 更完整的示例与自动化测试
-
+- 閺囨潙鐣崰鍕畱瀹搞儱鍙跨拫鍐暏閸楀繗顔呮稉搴ゎ潎濞?- 閺囧绮忕划鎺戝閻ㄥ嫯鐭鹃悽鍙樼瑢閻旀梹鏌囩粵鏍殣
+- Redis / DB 娴兼俺鐦界€涙ê鍋嶉幓鎺嶆
+- 閺囨潙鐣弫瀵告畱缁€杞扮伐娑撳氦鍤滈崝銊ュ濞村鐦?
 ## Contributing
 
-欢迎通过 Issue / PR 提建议。  
-如果你在接入过程中遇到问题，也欢迎直接提一个最小复现。
+濞嗐垼绻嬮柅姘崇箖 Issue / PR 閹绘劕缂撶拋顔衡偓? 
+婵″倹鐏夋担鐘叉躬閹恒儱鍙嗘潻鍥┾柤娑擃參浜ｉ崚浼存６妫版﹫绱濇稊鐔割偨鏉╁海娲块幒銉﹀絹娑撯偓娑擃亝娓剁亸蹇擃槻閻滆埇鈧?
+
+

@@ -1,31 +1,30 @@
 # Examples
 
-- `java-sdk-demo`：纯 Java SDK 示例
-- `spring-starter-demo`：Spring Boot Starter 示例
+- `java-sdk-demo`锛氱函 Java SDK 绀轰緥
+- `spring-starter-demo`锛歋pring Boot Starter 绀轰緥
 
-## 先安装本地依赖
-
+## 鍏堝畨瑁呮湰鍦颁緷璧?
 ```bash
-cd ../cqgent
+cd ../cq-agent-parent/cq-agent
 mvn -q clean install -DskipTests
 ```
 
-## 运行 Java SDK 示例
+## 杩愯 Java SDK 绀轰緥
 
 ```bash
 cd ../examples/java-sdk-demo
 mvn -q compile exec:java -Dexec.mainClass=demo.Main
 ```
 
-## 运行 Starter 示例
+## 杩愯 Starter 绀轰緥
 
 ```bash
 cd ../examples/spring-starter-demo
 mvn spring-boot:run
 ```
 
-启动后可先访问：
+鍚姩鍚庡彲鍏堣闂細
 
 - [http://localhost:18080/onboarding](http://localhost:18080/onboarding)
-- [http://localhost:18080/demo/chat?q=你好](http://localhost:18080/demo/chat?q=你好)
+- [http://localhost:18080/demo/chat?q=浣犲ソ](http://localhost:18080/demo/chat?q=浣犲ソ)
 

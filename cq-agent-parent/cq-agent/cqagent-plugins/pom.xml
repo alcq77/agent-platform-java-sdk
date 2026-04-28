@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.github.alcq77.cqgent</groupId>
+        <groupId>io.github.alcq77.cqagent</groupId>
         <artifactId>cqagent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -13,9 +13,10 @@
 
     <artifactId>cqagent-plugins</artifactId>
     <packaging>pom</packaging>
-    <name>cqgent-plugins</name>
+    <name>cqagent-plugins</name>
 
     <modules>
-        <module>cqgent-plugin-time</module>
+        <module>cqagent-plugin-time</module>
     </modules>
 </project>
+

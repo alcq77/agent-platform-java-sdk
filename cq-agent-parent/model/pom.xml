@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.github.alcq77.cqgent</groupId>
+        <groupId>io.github.alcq77.cqagent</groupId>
         <artifactId>cq-agent-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -14,9 +14,10 @@
     <artifactId>model</artifactId>
     <packaging>pom</packaging>
     <name>model</name>
-    <description>Model BC：模型网关、适配与计费</description>
+    <description>Model BC: model gateway, adapters, and billing contracts</description>
 
     <modules>
         <module>model-api</module>
     </modules>
 </project>
+

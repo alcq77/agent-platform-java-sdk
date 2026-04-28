@@ -5,28 +5,28 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.github.alcq77.cqgent</groupId>
+        <groupId>io.github.alcq77.cqagent</groupId>
         <artifactId>cqagent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>cqagent-java-sdk</artifactId>
-    <name>cqgent-java-sdk</name>
+    <name>cqagent-java-sdk</name>
 
     <dependencies>
         <dependency>
-            <groupId>io.github.alcq77.cqgent</groupId>
+            <groupId>io.github.alcq77.cqagent</groupId>
             <artifactId>agent-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.github.alcq77.cqgent</groupId>
+            <groupId>io.github.alcq77.cqagent</groupId>
             <artifactId>common-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.github.alcq77.cqgent</groupId>
+            <groupId>io.github.alcq77.cqagent</groupId>
             <artifactId>cqagent-core-engine</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -37,6 +37,24 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-open-ai</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-anthropic</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-ollama</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-dashscope</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -50,3 +68,4 @@
         </dependency>
     </dependencies>
 </project>
+

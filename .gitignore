@@ -10,3 +10,4 @@ references/
 
 # Local temporary dependency cache
 .tmp_lc4j/
+/.trae/

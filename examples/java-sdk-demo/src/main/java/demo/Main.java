@@ -1,9 +1,9 @@
 package demo;
 
-import io.github.alcq77.cqgent.agent.api.dto.AgentChatRequest;
-import io.github.alcq77.cqgent.product.sdk.AgentClient;
-import io.github.alcq77.cqgent.product.sdk.AgentClientBuilder;
-import io.github.alcq77.cqgent.product.spi.model.ProductEndpointConfig;
+import io.github.alcq77.cqagent.agent.api.dto.AgentChatRequest;
+import io.github.alcq77.cqagent.sdk.AgentClient;
+import io.github.alcq77.cqagent.sdk.AgentClientBuilder;
+import io.github.alcq77.cqagent.spi.model.ProductEndpointConfig;
 
 public class Main {
 

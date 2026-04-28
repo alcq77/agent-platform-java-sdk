@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.github.alcq77.cqgent</groupId>
+    <groupId>io.github.alcq77.cqagent</groupId>
     <artifactId>cq-agent-parent</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -15,11 +15,11 @@
         <java.version>21</java.version>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!-- 与安全补丁对齐：保持 Boot / Cloud / SCA 官方兼容矩阵一致 -->
+        <!-- 涓庡畨鍏ㄨˉ涓佸榻愶細淇濇寔 Boot / Cloud / SCA 瀹樻柟鍏煎鐭╅樀涓€鑷?-->
         <spring-boot.version>3.3.13</spring-boot.version>
         <spring-cloud.version>2023.0.5</spring-cloud.version>
         <spring-cloud-alibaba.version>2023.0.3.3</spring-cloud-alibaba.version>
-        <!-- LangChain4j BOM；与 Spring Boot 3.3 / Java 21 兼容 -->
+        <!-- LangChain4j BOM锛涗笌 Spring Boot 3.3 / Java 21 鍏煎 -->
         <langchain4j.version>0.36.2</langchain4j.version>
     </properties>
 
@@ -110,7 +110,7 @@
         </plugins>
     </build>
 
-    <!-- 可选：发版前执行 mvn -Pcve-check verify（首次会下载 NVD 数据，耗时较长；建议配置 NVD API Key） -->
+    <!-- 鍙€夛細鍙戠増鍓嶆墽琛?mvn -Pcve-check verify锛堥娆′細涓嬭浇 NVD 鏁版嵁锛岃€楁椂杈冮暱锛涘缓璁厤缃?NVD API Key锛?-->
     <profiles>
         <profile>
             <id>cve-check</id>
@@ -137,3 +137,4 @@
         </profile>
     </profiles>
 </project>
+
