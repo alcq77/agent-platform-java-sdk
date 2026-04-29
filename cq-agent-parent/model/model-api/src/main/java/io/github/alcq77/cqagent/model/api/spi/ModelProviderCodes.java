@@ -23,4 +23,13 @@ public final class ModelProviderCodes {
 
     /** Alibaba Cloud DashScope/Qwen provider. */
     public static final String DASHSCOPE = "dashscope";
+
+    /** Google AI Gemini provider. */
+    public static final String GEMINI = "gemini";
+
+    /** Azure OpenAI provider. */
+    public static final String AZURE_OPENAI = "azure-openai";
+
+    /** DeepSeek provider (OpenAI-compatible). */
+    public static final String DEEPSEEK = "deepseek";
 }
